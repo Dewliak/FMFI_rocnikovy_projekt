@@ -3,7 +3,7 @@
 //
 
 #include "Matrix.h"
-
+#include <string>
 #include <stdexcept>
 
 
@@ -121,6 +121,15 @@ bool Matrix::operator==(const Matrix& other) const {
 
 string Matrix::to_string() const {
     string repr = "";
+    for (int i = 0; i < row_count; i++) {
+        for (int j =0; j < col_count;j++) {
+            repr += std::to_string(get(i,j));
+            repr += " ";
+        }
+        repr += "\n";
+    }
+
+    return repr;
 }
 
 Matrix Matrix::operator*(const Matrix &other) const {
@@ -129,7 +138,17 @@ Matrix Matrix::operator*(const Matrix &other) const {
     }
 
     Matrix result(row_count, row_count);
-    // TODO: matrix mul
+
+    for (int i = 0; i < row_count; i++) {
+        for (int j = 0; j < other.get_col_count(); j++) {
+            result.set(i,j,0);
+            for (int k = 0; k < other.get_row_count(); k++) {
+                result.set(i,j,result.get(i,j) + get(i,k) * other(k,j));
+                //rslt[i][j] += mat1[i][k] * mat2[k][j];
+            }
+        }
+    }
+
     return result;
 }
 

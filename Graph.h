@@ -6,6 +6,7 @@
 #define ROCNIKOVY_PROJEKT_GRAPH_H
 #include <string>
 #include <vector>
+#include "Matrix.h"
 
 using namespace std;
 
@@ -27,7 +28,7 @@ public:
     vector<int> neighbors(int u);
 
 private:
-    vector<vector<int>> matrix;
+    Matrix matrix;
     int vertices;
 
     void add_transpose();

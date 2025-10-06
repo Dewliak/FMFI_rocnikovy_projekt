@@ -4,7 +4,7 @@
 //
 
 #include "Graph.h"
-
+#include "Matrix.h"
 #include <bitset>
 #include <vector>
 #include <iostream>
@@ -19,12 +19,7 @@ Graph::~Graph() {
 };
 
 void Graph::printMatrix() {
-    for (int i = 0; i < matrix.size(); i++) {
-        for (int j = 0; j < matrix[i].size(); j++) {
-            cout << matrix[i][j];
-        }
-        cout << endl;
-    }
+    cout << matrix.to_string() << endl;
 
 }
 
@@ -32,7 +27,8 @@ void Graph::printMatrix() {
 void Graph::add_transpose() {
     for (int i = 0; i < vertices; i++) {
         for (int j = 0; j < i; j++) {
-            matrix[j][i] = matrix[i][j];
+            matrix.set(j,i, matrix(i,j));
+//            matrix[j][i] = matrix[i][j];
         }
     }
 }
@@ -48,8 +44,10 @@ void Graph::copyMatrix(vector<vector<int>> matrix) {
 void Graph::removeVertice(int u) {
     // TODO: test
     for (int i = 0; i < vertices;i++) {
-        matrix[u][i] = 0;
-        matrix[i][u] = 0;
+        matrix.set(u,i,0);
+        matrix.set(i,u,0);
+        //matrix[u][i] = 0;
+        //matrix[i][u] = 0;
     }
 
 }
@@ -58,9 +56,10 @@ void Graph::addEdge(int u, int v, int color) {
     if (u > vertices - 1 || u < 0 || v > vertices - 1 || v < 0) {
         throw "vertex out of range";
     }
-
-    matrix[u][v] = color;
-    matrix[v][u] = color;
+    matrix.set(u, v, color);
+    matrix.set(v, u, color);
+    // matrix[u][v] = color;
+    // matrix[v][u] = color;
 
 }
 
@@ -69,8 +68,10 @@ void Graph::removeEdge( int u, int v) {
         throw "vertex out of range";
     }
 
-    matrix[u][v] = 0;
-    matrix[v][u] = 0;
+    matrix.set(u, v, 0);
+    matrix.set(v,u, 0);
+    // matrix[u][v] = 0;
+    // matrix[v][u] = 0;
 
 }
 
@@ -79,7 +80,7 @@ bool Graph::hasEdge(int u, int v) {
         throw "vertex out of range";
     }
 
-    return (matrix[u][v] != 0);
+    return (matrix(u,v) != 0);
 }
 
 int Graph::degree(int u) {
@@ -91,7 +92,7 @@ vector<int> Graph::neighbors(int u) {
 }
 
 vector<vector<int> > Graph::getMatrix() {
-    return matrix;
+    return matrix.get_data();
 }
 
 
@@ -107,7 +108,9 @@ void Graph::convert_to_matrice(string format) {
     }
 
 
-    matrix = vector(vertices,vector<int>(vertices,0));
+    Matrix m = Matrix(vertices,vertices);
+    matrix = m;
+    //matrix = vector(vertices,vector<int>(vertices,0));
 
     int num_in_bot_left_diag = 0;
     for (int i = 0; i < vertices; i++) {
@@ -121,7 +124,8 @@ void Graph::convert_to_matrice(string format) {
         // fill the first i with zeroes, cuz the triangle but the constructor already fills it up
 
         for (int j = 0; j < i; j++) {
-            matrix[i][j] = all_bits[pos++] - '0';
+            matrix.set(i,j,all_bits[pos++] - '0');
+            //matrix[i][j] = all_bits[pos++] - '0';
         }
 
     }

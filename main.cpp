@@ -91,5 +91,11 @@ int main() {
 
     }
 
+    Matrix m1({{1,1},{2,2},{3,3}});
+    Matrix m2({{1,1,1},{2,2,2}});
+
+    Matrix m3 = m1 * m2;
+    cout << m3.to_string() << endl;
+
     return 0;
 }
