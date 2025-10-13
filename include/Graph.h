@@ -13,6 +13,10 @@ using namespace std;
 class Graph {
 public:
     explicit Graph(const std::string graph6format);
+
+    Graph(Matrix input_matrix);
+
+
     ~Graph();
 
     void printMatrix();
@@ -26,7 +30,7 @@ public:
     bool hasEdge(int u, int v);
     int degree(int u);
     vector<int> neighbors(int u);
-
+    Matrix generateIncidenceMatrix();
 private:
     Matrix matrix;
     int vertices;

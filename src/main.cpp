@@ -4,8 +4,8 @@
 #include <string>
 #include <bitset>
 
-#include "Graph.h"
-#include "ColoringSAT.h"
+#include "../include/Graph.h"
+#include "../include/ColoringSAT.h"
 using namespace std;
 /*
 def graph6ToAdj(graph6):
@@ -75,9 +75,26 @@ def graph6ToAdj(graph6):
 int main() {
     // D?C - colorable
     // D~? - not colorable
-    string format = "I?h]@eOWG";
+    string format = "C~";
     Graph g(format);
 
+    vector<vector<int>> vm = g.getMatrix();
+    Matrix m(vm);
+
+    Matrix b = Matrix::generateIncidenceMatrix(m);
+    Matrix b_t = b.transpose();
+    Matrix I = Matrix::identity(b.get_col_count());
+    Matrix ans = b_t * b - I * 2;
+
+    cout << ans.to_string() << endl;
+    Graph g2(ans);
+
+    ColoringSAT sat(g2, 3);
+
+
+    std::cout << (sat.solve() ? "SATISFIABLE" : "UNSATISFIABLE") << std::endl;
+
+    /*
     g.printMatrix();
 
     ColoringSAT sat(g, 3);
@@ -91,11 +108,25 @@ int main() {
 
     }
 
-    Matrix m1({{1,1},{2,2},{3,3}});
-    Matrix m2({{1,1,1},{2,2,2}});
-
-    Matrix m3 = m1 * m2;
+    Matrix m1({
+        {0,1,0,0,0},
+        {1,0,1,1,0},
+        {0,1,0,1,0},
+        {0,1,1,0,1},
+        {0,0,0,1,0}});
+    Matrix m3 = Matrix::generateIncidenceMatrix(m1);
     cout << m3.to_string() << endl;
+    Matrix m3_t = m3.transpose();
 
+    Matrix identity = Matrix::identity(m1.get_row_count());
+
+    Matrix ans = m3_t * m3 - identity*2;
+
+    cout << ans.to_string() << endl;
+
+    Graph g2(ans);
+    ColoringSAT sat2(g2, 3);
+    std::cout << (sat.solve() ? "SATISFIABLE" : "UNSATISFIABLE") << std::endl;
+    */
     return 0;
 }

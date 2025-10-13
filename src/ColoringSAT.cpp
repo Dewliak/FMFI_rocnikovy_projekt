@@ -2,12 +2,14 @@
 // Created by dewliak on 10/5/25.
 //
 
-#include "ColoringSAT.h"
+#include "../include/ColoringSAT.h"
 
 #include <iostream>
 #include <ostream>
 #include <stdexcept>
 ColoringSAT::ColoringSAT(const Graph &g, int color_count): graph(g), numColors(color_count) {
+    encodeConstraints();
+
 }
 
 int ColoringSAT::var(int vertex, int color) {
@@ -68,11 +70,20 @@ void ColoringSAT::encodeConstraints() {
 }
 
 bool ColoringSAT::solve() {
-    bool sat = solver.solve();
-    return sat;
+    int sat = solver.solve();
+
+    if (sat == 10) {
+        satisfied = true;
+        return true;
+    }
+    return false;
+
 }
 
 std::vector<int> ColoringSAT::getColoring() {
+    if (!satisfied) {
+        return vector<int>();
+    }
     vector<int> colors = vector<int>(graph.getVerticesCount(), -1);
     for (int i = 0; i < graph.getVerticesCount(); i++) {
         for (int k = 0; k < numColors;k++) {

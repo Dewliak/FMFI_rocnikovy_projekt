@@ -3,8 +3,8 @@
 // indexing starts from 0
 //
 
-#include "Graph.h"
-#include "Matrix.h"
+#include "../include/Graph.h"
+#include "../include/Matrix.h"
 #include <bitset>
 #include <vector>
 #include <iostream>
@@ -12,6 +12,19 @@
 
 Graph::Graph(const std::string graph6format) {
     convert_to_matrice(graph6format);
+}
+
+Graph::Graph(const Matrix input_matrix) {
+    if (!Matrix::isSquare(input_matrix)) {
+        throw  runtime_error("The graph matrice has to be NxN.");
+    }
+
+    if (!Matrix::isSymetrical(input_matrix)) {
+        throw runtime_error("The matrix has to be symetrical.");
+    }
+
+    this->matrix = input_matrix;
+    this->vertices = input_matrix.get_row_count();
 }
 
 Graph::~Graph() {
@@ -89,6 +102,10 @@ int Graph::degree(int u) {
 
 vector<int> Graph::neighbors(int u) {
     throw std::logic_error("Not implemented!");
+}
+
+Matrix Graph::generateIncidenceMatrix() {
+    return Matrix::generateIncidenceMatrix(matrix);
 }
 
 vector<vector<int> > Graph::getMatrix() {

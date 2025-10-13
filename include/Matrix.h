@@ -44,8 +44,10 @@ public:
     Matrix operator*(const Matrix& other) const;
     Matrix operator*(int scalar) const;
 
-
-
+    static Matrix generateIncidenceMatrix(const Matrix& matrix);
+    static bool isSymetrical(const Matrix& matrix);
+    static bool isSquare(const Matrix& matrix);
+    static Matrix identity(size_t);
 };
 
 

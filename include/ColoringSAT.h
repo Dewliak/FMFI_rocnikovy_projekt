@@ -11,6 +11,8 @@
 class ColoringSAT {
 public:
     ColoringSAT(const Graph &g, int color_count=3);
+    ColoringSAT(const ColoringSAT&) = delete;
+    ColoringSAT& operator=(const ColoringSAT&) = delete;
 
     void encodeConstraints();
     bool solve();
@@ -21,6 +23,7 @@ private:
     void adjecent_nodes_differnet_colors();
 
     Graph graph;
+    bool satisfied = false;
     int numColors;
     int var(int vertex, int color);
     CaDiCaL::Solver solver;

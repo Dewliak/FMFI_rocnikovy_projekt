@@ -2,10 +2,10 @@
 // Created by dewliak on 10/6/25.
 //
 
-#include "Matrix.h"
+#include "../include/Matrix.h"
 #include <string>
 #include <stdexcept>
-
+#include <iostream>
 
 Matrix::Matrix() : row_count(0), col_count(0) {
 
@@ -67,11 +67,13 @@ const int&  Matrix::operator()(int i, int j) const {
 }
 
 bool Matrix::inBounds(int i, int j) const {
+
     return (i >= 0 && i < get_row_count()) && (j >= 0 && j < get_col_count());
 }
 
 bool Matrix::same_size(const Matrix& other) const {
-    return (row_count == other.get_row_count() && col_count == other.get_row_count());
+    cout << row_count << " - " << other.get_row_count() << " || " << col_count << " - " << other.col_count << endl;
+    return (row_count == other.get_row_count() && col_count == other.get_col_count());
 }
 
 Matrix Matrix::operator+(const Matrix& other) const {
@@ -133,7 +135,7 @@ string Matrix::to_string() const {
 }
 
 Matrix Matrix::operator*(const Matrix &other) const {
-    if (row_count != other.get_col_count() || col_count != other.get_row_count()) {
+    if (col_count != other.get_row_count()) {
         throw runtime_error("Matrixes have to have size NxM and MxN");
     }
 
@@ -163,3 +165,70 @@ Matrix Matrix::operator*(int scalar) const {
 
     return result;
 }
+
+Matrix Matrix::generateIncidenceMatrix(const Matrix &matrix) {
+
+    int vertices = matrix.get_row_count();
+    int c = 0;
+    int edge_count = 0;
+    // naive, have to me really optimised
+
+    for (int i =0; i < vertices; i++) {
+        for (int j = i+1; j < vertices; j++) {
+            if (matrix(i,j) != 0) {
+                edge_count++;
+            }
+        }
+    }
+
+    Matrix result(vertices, edge_count);
+
+    for (int i =0; i < vertices; i++) {
+        for (int j = i+1; j < vertices; j++) {
+
+            if (matrix(i,j) != 0) {
+
+                result.set(i,c,1);
+
+                result.set(j,c,1);
+                c++;
+            }
+
+
+        }
+    }
+
+
+    return result;
+
+}
+
+bool Matrix::isSquare(const Matrix &matrix) {
+    //cout << matrix.get_row_count() << ", " << matrix.get_col_count() << " - " << (matrix.get_row_count() == matrix.get_col_count()) << endl;
+    return matrix.get_row_count() == matrix.get_col_count();
+}
+
+Matrix Matrix::identity(size_t n) {
+    Matrix result(n,n);
+
+    for (int i =0; i < n;i++) {
+        result.set(i,i,1);
+    }
+
+    return result;
+}
+
+bool Matrix::isSymetrical(const Matrix &matrix) {
+    if (!Matrix::isSquare(matrix)) {
+        throw "The matrix what is not a square matrix can't be symetrical";
+    }
+    for (int i =0; i < matrix.get_row_count(); i++) {
+        for (int j =i+1; j < matrix.get_col_count(); j++) {
+            if (matrix(i,j) != matrix(j,i)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
