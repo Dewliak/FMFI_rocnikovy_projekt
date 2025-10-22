@@ -4,10 +4,17 @@
 
 #include "../include/ColoringSAT.h"
 
+// ! TEMPORARY
+#include "../include/CadicalSAT.h"
+
+
 #include <iostream>
 #include <ostream>
-#include <stdexcept>
+#include <memory>
+
+
 ColoringSAT::ColoringSAT(const Graph &g, int color_count): graph(g), numColors(color_count) {
+    solver = std::make_unique<CadicalSAT>();
     encodeConstraints();
 
 }
@@ -23,10 +30,11 @@ void ColoringSAT::node_atleast_one_color() {
     // iterate every node
     for (int i =0; i < vertex_count; i++) {
         // add every color
+        vector<pair<int,bool>> clause = vector<pair<int,bool>>();
         for (int k = 0; k < numColors; k++) {
-            solver.add(var(i,k));
+            clause.push_back(make_pair(var(i,k),true));
         }
-        solver.add(0);
+        solver->add_clause(clause);
     }
 }
 
@@ -38,9 +46,10 @@ void ColoringSAT::no_multiple_colors_of_node(){
         // add every color
         for (int k1 = 0; k1 < numColors; k1++) {
             for (int k2 = k1 + 1; k2 < numColors; k2++) {
-                solver.add(-var(i,k1));
-                solver.add(-var(i,k2));
-                solver.add(0);
+                vector<pair<int,bool>> clause = vector<pair<int,bool>>();
+                clause.push_back(make_pair(var(i,k1),false));
+                clause.push_back(make_pair(var(i,k2),false));
+                solver->add_clause(clause);
             }
         }
     }
@@ -53,9 +62,11 @@ void ColoringSAT::adjecent_nodes_differnet_colors() {
         for (int j = 0; j < i; j++) {
             if (graph.hasEdge(i,j)) {
                 for (int k =0; k < numColors; k++) {
-                    solver.add(-var(i,k));
-                    solver.add(-var(j,k));
-                    solver.add(0);
+                    vector<pair<int,bool>> clause = vector<pair<int,bool>>();
+                    clause.push_back(make_pair(var(i,k),false));
+                    clause.push_back(make_pair(var(j,k),false));
+                    solver->add_clause(clause);
+
                 }
             }
 
@@ -70,9 +81,10 @@ void ColoringSAT::encodeConstraints() {
 }
 
 bool ColoringSAT::solve() {
-    int sat = solver.solve();
 
-    if (sat == 10) {
+    SolveResult result = solver->solve();
+
+    if (result == SolveResult::SAT) {
         satisfied = true;
         return true;
     }
@@ -82,13 +94,13 @@ bool ColoringSAT::solve() {
 
 std::vector<int> ColoringSAT::getColoring() {
     if (!satisfied) {
-        return vector<int>();
+        return {};
     }
     vector<int> colors = vector<int>(graph.getVerticesCount(), -1);
     for (int i = 0; i < graph.getVerticesCount(); i++) {
         for (int k = 0; k < numColors;k++) {
-            cout << i << " - " << k << ": " << solver.val(var(i,k)) << endl;
-            if (solver.val(var(i,k)) > 0) {
+            cout << i << " - " << k << ": " << solver->variable_value(var(i,k)) << endl;
+            if (solver->variable_value(var(i,k))) {
 
                 colors[i] = k;
 

@@ -6,7 +6,11 @@
 #define ROCNIKOVY_PROJEKT_COLORINGSAT_H
 
 #include "Graph.h"
-#include "cadical.hpp"
+#include <memory>
+
+#include "SATInterface.h"
+
+
 
 class ColoringSAT {
 public:
@@ -26,7 +30,7 @@ private:
     bool satisfied = false;
     int numColors;
     int var(int vertex, int color);
-    CaDiCaL::Solver solver;
+    std::unique_ptr<SATInterface> solver;
 };
 
 

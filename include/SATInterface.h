@@ -15,10 +15,10 @@ class SATInterface {
     virtual ~SATInterface() = default;
 
 
-    virtual void add_clause(std::vector<std::pair<int,bool>> literal );
+    virtual void add_clause(std::vector<std::pair<int,bool>> literal )=0;
     //virtual add(unsigned var, boolean value);
-    virtual SolveResult solve();
-    virtual bool variable_value(int var);
+    virtual SolveResult solve()=0;
+    virtual bool variable_value(int var)=0;
 
     private:
 };
