@@ -11,7 +11,7 @@
 
 
 
-class AdjacencyListGraph: public IGraph<int,Edge> {
+class AdjacencyListGraph: public IGraph{
 
 public:
     // vertex op
@@ -29,7 +29,7 @@ public:
     std::vector<Edge> getEdges() const override;
     std::vector<int> getNeighborVertices(const int& vertex) const override;
     std::vector<Edge> getNeighborEdges(const int& vertex) const override;
-
+    EdgeList getEdgeList() const override;
     // data
     int getVertexCount() const override;
     int getEdgeCount() const override;
