@@ -21,7 +21,7 @@ EdgeList::EdgeList(const std::vector<std::vector<int>> &two_dimensional_array) {
         }
     }
 }
-
+/*
 EdgeList::EdgeList(const Graph &graph) {
     edge_list = {};
     edge_map = {};
@@ -38,6 +38,7 @@ EdgeList::EdgeList(const Graph &graph) {
         }
     }
 }
+*/
 
 std::map<std::pair<int,int>,int> EdgeList::getEdgeMap() const {
     return edge_map;

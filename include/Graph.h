@@ -24,7 +24,7 @@ public:
     void printMatrix();
     vector<vector<int>> getMatrix() const;
 
-    EdgeList getEdgeList();
+
 
     int getVerticesCount() const;
     void copyMatrix(vector<vector<int>> matrix);
