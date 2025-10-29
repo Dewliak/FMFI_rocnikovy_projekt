@@ -5,6 +5,8 @@
 #ifndef ROCNIKOVY_PROJEKT_EDGE_H
 #define ROCNIKOVY_PROJEKT_EDGE_H
 
+#include <set>
+
 struct Edge {
     int first;
     int second;

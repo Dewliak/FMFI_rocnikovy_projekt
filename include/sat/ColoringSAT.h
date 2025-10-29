@@ -5,10 +5,10 @@
 #ifndef ROCNIKOVY_PROJEKT_COLORINGSAT_H
 #define ROCNIKOVY_PROJEKT_COLORINGSAT_H
 
-#include "Graph.h"
+#include "../graph/Graph.h"
 #include <memory>
 
-#include "SATInterface.h"
+#include "../include/sat/ISAT.h"
 
 
 
@@ -30,7 +30,7 @@ private:
     bool satisfied = false;
     int numColors;
     int var(int vertex, int color);
-    std::unique_ptr<SATInterface> solver;
+    std::unique_ptr<ISAT> solver;
 };
 
 

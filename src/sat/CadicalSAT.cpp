@@ -3,7 +3,7 @@
 //
 
 
-#include "../include/CadicalSAT.h"
+#include "../../include/sat/CadicalSAT.h"
 
 #include <cadical.hpp>
 #include <iostream>

@@ -3,15 +3,15 @@
 // indexing starts from 0
 //
 
-#include "../include/Graph.h"
-#include "../include/Matrix.h"
+#include "../../include/graph/Graph.h"
+#include "../../include/Matrix.h"
 #include <bitset>
 #include <vector>
 #include <iostream>
 #include <map>
 #include <stdexcept>
 
-#include "EdgeList.h"
+#include "../include/graph/EdgeList.h"
 
 Graph::Graph(const std::string graph6format) {
     convert_to_matrice(graph6format);

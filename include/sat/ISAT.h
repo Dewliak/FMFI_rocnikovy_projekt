@@ -10,9 +10,9 @@
 
 enum class SolveResult {SAT, UNSAT, UNKNOWN};
 
-class SATInterface {
+class ISAT {
     public:
-    virtual ~SATInterface() = default;
+    virtual ~ISAT() = default;
 
 
     virtual void add_clause(std::vector<std::pair<int,bool>> literal )=0;

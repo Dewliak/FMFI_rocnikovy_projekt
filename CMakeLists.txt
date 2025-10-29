@@ -10,14 +10,14 @@ link_directories(${CAIDCAL_DIR}/build)
 # --- Main executable ---
 add_executable(rocnikovy_projekt
         src/main.cpp
-        src/Graph.cpp
-        include/Graph.h
-        src/ColoringSAT.cpp
-        include/ColoringSAT.h
+        src/graph/Graph.cpp
+        include/graph/Graph.h
+        src/sat/ColoringSAT.cpp
+        include/sat/ColoringSAT.h
         src/Matrix.cpp
         include/Matrix.h
-        src/CadicalSAT.cpp
-        include/CadicalSAT.h
+        src/sat/CadicalSAT.cpp
+        include/sat/CadicalSAT.h
 )
 target_link_libraries(rocnikovy_projekt PRIVATE cadical)
 
@@ -36,22 +36,24 @@ add_executable(MyTests
         tests/test_main.cpp
         tests/test_graph_coloring.cpp
         src/Matrix.cpp
-        src/Graph.cpp
-        src/ColoringSAT.cpp
-        include/SATInterface.h
-        src/SATInterface.cpp
-        include/CadicalSAT.h
-        src/CadicalSAT.cpp
-        include/EdgeList.h
-        src/EdgeList.cpp
-        include/PMSAT.h
-        src/PMSAT.cpp
-        include/IGraph.h
-        src/IGraph.h
-        src/AdjacencyListGraph.cpp
-        include/AdjacencyListGraph.h
+        src/graph/Graph.cpp
+        src/sat/ColoringSAT.cpp
+        include/sat/ISAT.h
+        src/sat/ISAT.cpp
+        include/sat/CadicalSAT.h
+        src/sat/CadicalSAT.cpp
+        include/graph/EdgeList.h
+        src/graph/EdgeList.cpp
+        include/perfect_matching/PMSAT.h
+        src/perfect_matching/PMSAT.cpp
+        include/graph/IGraph.h
+        src/graph/IGraph.h
+        src/graph/AdjacencyListGraph.cpp
+        include/graph/AdjacencyListGraph.h
         tests/test_igraph.cpp
-        include/Edge.h
+        include/graph/Edge.h
+        include/graph/GraphAlgorithms.h
+        src/graph/GraphAlgorithms.cpp
 )
 
 # Important: link both gtest and cadical

@@ -2,10 +2,10 @@
 // Created by dewliak on 10/5/25.
 //
 
-#include "../include/ColoringSAT.h"
+#include "../../include/sat/ColoringSAT.h"
 
 // ! TEMPORARY
-#include "../include/CadicalSAT.h"
+#include "../../include/sat/CadicalSAT.h"
 
 
 #include <iostream>

@@ -6,13 +6,13 @@
 #define ROCNIKOVY_PROJEKT_CADICALSAT_H
 
 
-#include "SATInterface.h"
+#include "ISAT.h"
 #include <cadical.hpp>
 
 #include <vector>
 #include <utility>
 #include <memory>
-class CadicalSAT: public SATInterface {
+class CadicalSAT: public ISAT {
 public:
     CadicalSAT();
     CadicalSAT(const CadicalSAT&) = delete;

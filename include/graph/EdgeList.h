@@ -8,19 +8,19 @@
 #include <utility>
 
 #include "Graph.h"
-#include "Edge.h"
+#include "../include/graph/Edge.h"
 
 struct EdgeList {
-    std::map<std::pair<int,int>, int>  edge_map;
-    std::vector<std::pair<int,int>> edge_list;
+    std::map<Edge, int>  edge_map;
+    std::vector<Edge> edge_list;
 
     EdgeList(const std::vector<std::vector<int>> &two_dimensional_array);
 
     //explicit EdgeList(const Graph &graph);
-    EdgeList();
+    EdgeList(std::map<Edge, int>  graph_edge_map, std::vector<Edge> graph_edge_list);
     //EdgeList(std::map<);
-    std::map<std::pair<int,int>,int> getEdgeMap() const;
-    std::vector<std::pair<int,int>> getEdgeList() const;
+    std::map<Edge, int> getEdgeMap() const;
+    std::vector<Edge> getEdgeList() const;
 
 };
 

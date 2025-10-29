@@ -3,8 +3,8 @@
 //
 #include <gtest/gtest.h>
 #include "../include/Matrix.h"
-#include "../include/Graph.h"
-#include "../include/ColoringSAT.h"
+#include "../include/graph/Graph.h"
+#include "../include/sat/ColoringSAT.h"
 #include <vector>
 TEST(GraphColoring, Colorable1) {
     /*

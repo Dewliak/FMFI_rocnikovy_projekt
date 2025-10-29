@@ -4,8 +4,8 @@
 // test_adjacencylistgraph.cpp
 #include <gtest/gtest.h>
 #include <algorithm>
-#include "../include/AdjacencyListGraph.h"
-#include "../include/IGraph.h"
+#include "../include/graph/AdjacencyListGraph.h"
+#include "../include/graph/IGraph.h"
 
 
 class GraphTest : public ::testing::Test {

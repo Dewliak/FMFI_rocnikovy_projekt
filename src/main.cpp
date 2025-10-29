@@ -4,8 +4,8 @@
 #include <string>
 #include <bitset>
 
-#include "../include/Graph.h"
-#include "../include/ColoringSAT.h"
+#include "../include/graph/Graph.h"
+#include "../include/sat/ColoringSAT.h"
 using namespace std;
 /*
 def graph6ToAdj(graph6):

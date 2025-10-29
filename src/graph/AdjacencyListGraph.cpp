@@ -2,7 +2,7 @@
 // Created by dewliak on 10/29/25.
 //
 
-#include "../include/AdjacencyListGraph.h"
+#include "../../include/graph/AdjacencyListGraph.h"
 
 #include <algorithm>
 #include <cassert>
@@ -146,6 +146,32 @@ std::vector<Edge> AdjacencyListGraph::getNeighborEdges(const int& vertex) const 
     neighbor.assign(adjacencyList.at(vertex).begin(),adjacencyList.at(vertex).end());
 
     return neighbor;
+}
+
+EdgeList AdjacencyListGraph::getEdgeList() const {
+    std::map<Edge, int>  edge_map = {};
+    std::vector<Edge> edge_list = {};
+
+    // invariant [i,j] always i < j
+
+    int counter =0;
+    for (const auto& it: adjacencyList) {
+        const int first_vertex = it.first;
+
+        for (Edge e: it.second) {
+            int other_vertex = ((first_vertex == e.getFirst()) ? e.getSecond() : e.getFirst());
+
+            if (first_vertex < other_vertex) {
+                edge_map[e] = counter;
+                edge_list.push_back(e);
+                counter++;
+            }
+        }
+    }
+
+
+    return EdgeList(edge_map, edge_list);
+
 }
 
 int AdjacencyListGraph::getVertexCount() const {
