@@ -8,7 +8,10 @@
 #include <bitset>
 #include <vector>
 #include <iostream>
+#include <map>
 #include <stdexcept>
+
+#include "EdgeList.h"
 
 Graph::Graph(const std::string graph6format) {
     convert_to_matrice(graph6format);
@@ -108,7 +111,7 @@ Matrix Graph::generateIncidenceMatrix() {
     return Matrix::generateIncidenceMatrix(matrix);
 }
 
-vector<vector<int> > Graph::getMatrix() {
+vector<vector<int> > Graph::getMatrix() const {
     return matrix.get_data();
 }
 

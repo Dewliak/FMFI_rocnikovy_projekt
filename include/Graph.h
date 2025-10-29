@@ -6,6 +6,8 @@
 #define ROCNIKOVY_PROJEKT_GRAPH_H
 #include <string>
 #include <vector>
+
+#include "EdgeList.h"
 #include "Matrix.h"
 
 using namespace std;
@@ -20,7 +22,9 @@ public:
     ~Graph();
 
     void printMatrix();
-    vector<vector<int>> getMatrix();
+    vector<vector<int>> getMatrix() const;
+
+    EdgeList getEdgeList();
 
     int getVerticesCount() const;
     void copyMatrix(vector<vector<int>> matrix);
@@ -31,6 +35,7 @@ public:
     int degree(int u);
     vector<int> neighbors(int u);
     Matrix generateIncidenceMatrix();
+
 private:
     Matrix matrix;
     int vertices;
