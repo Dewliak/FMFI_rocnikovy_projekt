@@ -8,13 +8,13 @@
 #include "../graph/Graph.h"
 #include <memory>
 
-#include "../include/sat/ISAT.h"
-
+#include "sat/ISAT.h"
+#include "graph/IGraph.h"
 
 
 class ColoringSAT {
 public:
-    ColoringSAT(const Graph &g, int color_count=3);
+    ColoringSAT(const IGraph& g, int color_count=3);
     ColoringSAT(const ColoringSAT&) = delete;
     ColoringSAT& operator=(const ColoringSAT&) = delete;
 
@@ -26,11 +26,11 @@ private:
     void no_multiple_colors_of_node(); // constraint
     void adjecent_nodes_differnet_colors();
 
-    Graph graph;
+    const IGraph& graph;
     bool satisfied = false;
     int numColors;
     int var(int vertex, int color);
-    std::unique_ptr<ISAT> solver;
+    std::unique_ptr<ISAT> satSolver;
 };
 
 
