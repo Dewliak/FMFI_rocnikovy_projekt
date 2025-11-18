@@ -3,7 +3,7 @@
 //
 
 
-#include "../../include/graph/EdgeList.h"
+#include "graph/EdgeList.h"
 
 EdgeList::EdgeList(const std::vector<std::vector<int>> &two_dimensional_array) {
     edge_list = {};

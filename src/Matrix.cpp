@@ -2,7 +2,7 @@
 // Created by dewliak on 10/6/25.
 //
 
-#include "../include/Matrix.h"
+#include "Matrix.h"
 #include <string>
 #include <stdexcept>
 #include <iostream>

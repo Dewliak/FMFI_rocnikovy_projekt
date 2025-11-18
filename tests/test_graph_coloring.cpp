@@ -2,9 +2,10 @@
 // Created by dewliak on 10/7/25.
 //
 #include <gtest/gtest.h>
-#include "../include/Matrix.h"
-#include "../include/graph/Graph.h"
-#include "../include/sat/ColoringSAT.h"
+#include "Matrix.h"
+#include "graph/Graph.h"
+#include "graph/AdjacencyListGraph.h"
+#include "sat/ColoringSAT.h"
 #include <vector>
 TEST(GraphColoring, Colorable1) {
     /*
@@ -18,7 +19,7 @@ TEST(GraphColoring, Colorable1) {
     Graph g(m);
     */
     string format = "Cl";
-    Graph g(format);
+    AdjacencyListGraph g(format);
     ColoringSAT s(g,3);
     EXPECT_EQ(s.solve(),true);
 }
@@ -35,8 +36,8 @@ TEST(GraphColoring, NotColorable1) {
     Matrix m(not_three_colorable);
     Graph g(m);
     */
-    string format = "C~";
-    Graph g(format);
+    string format = "J?@~?@?@"; // Petersen-graph
+    AdjacencyListGraph g(format);
 
     ColoringSAT s(g,3);
 

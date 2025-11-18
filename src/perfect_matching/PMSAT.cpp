@@ -2,13 +2,13 @@
 // Created by dewliak on 10/28/25.
 //
 
-#include "../../include/perfect_matching/PMSAT.h"
+#include "perfect_matching/PMSAT.h"
 
 #include <algorithm>
 #include <set>
 #include <vector>
 
-#include "../../include/graph/EdgeList.h"
+#include "graph/EdgeList.h"
 
 
 template<typename T>

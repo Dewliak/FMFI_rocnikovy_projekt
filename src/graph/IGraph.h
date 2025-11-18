@@ -1,8 +1,0 @@
-//
-// Created by dewliak on 10/29/25.
-//
-
-#ifndef ROCNIKOVY_PROJEKT_IGRAPH_H
-#define ROCNIKOVY_PROJEKT_IGRAPH_H
-
-#endif //ROCNIKOVY_PROJEKT_IGRAPH_H

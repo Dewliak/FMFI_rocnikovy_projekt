@@ -7,8 +7,8 @@
 
 
 #include <vector>
-#include <../include/graph/EdgeList.h>
-#include <../include/graph/Edge.h>
+#include <graph/EdgeList.h>
+#include <graph/Edge.h>
 
 class IGraph {
     public:

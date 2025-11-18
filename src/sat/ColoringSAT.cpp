@@ -2,10 +2,10 @@
 // Created by dewliak on 10/5/25.
 //
 
-#include "../../include/sat/ColoringSAT.h"
+#include "sat/ColoringSAT.h"
 
 // ! TEMPORARY
-#include "../../include/sat/CadicalSAT.h"
+#include "sat/CadicalSAT.h"
 
 
 #include <iostream>
@@ -25,9 +25,9 @@ int ColoringSAT::var(int vertex, int color) {
 }
 
 void ColoringSAT::encodeConstraints() {
-    node_atleast_one_color();
-    no_multiple_colors_of_node();
-    adjecent_nodes_differnet_colors();
+    //node_atleast_one_color();
+    //no_multiple_colors_of_node();
+    //adjecent_nodes_differnet_colors();
 
     // every edge has atleast one color, and not more than one color
     EdgeList edge_list = graph.getEdgeList();

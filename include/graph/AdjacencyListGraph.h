@@ -14,6 +14,9 @@
 class AdjacencyListGraph: public IGraph{
 
 public:
+    explicit AdjacencyListGraph(std::string graph6format);
+    explicit AdjacencyListGraph(Matrix matrix);
+    AdjacencyListGraph();
     // vertex op
     void addVertex(const int& vertex) override;
     void removeVertex(const  int& vertex) override;

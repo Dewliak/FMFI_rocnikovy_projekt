@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "EdgeList.h"
-#include "../Matrix.h"
+#include "Matrix.h"
 
 using namespace std;
 

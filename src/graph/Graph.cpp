@@ -3,8 +3,8 @@
 // indexing starts from 0
 //
 
-#include "../../include/graph/Graph.h"
-#include "../../include/Matrix.h"
+#include "graph/Graph.h"
+#include "Matrix.h"
 #include <bitset>
 #include <vector>
 #include <iostream>

@@ -2,13 +2,31 @@
 // Created by dewliak on 10/29/25.
 //
 
-#include "../../include/graph/AdjacencyListGraph.h"
+
 
 #include <algorithm>
 #include <cassert>
 #include <format>
 #include <iostream>
 #include <set>
+
+#include "graph/AdjacencyListGraph.h"
+#include "graph/GraphAlgorithms.h"
+
+AdjacencyListGraph::AdjacencyListGraph(std::string graph6format) : AdjacencyListGraph(GraphAlgorithms::graph6format_to_matrix(graph6format)) {
+}
+
+AdjacencyListGraph::AdjacencyListGraph(Matrix matrix) {
+    for (int i =0; i < matrix.get_row_count(); i++) {
+        for (int j = i+1; j < matrix.get_col_count(); j++) {
+            if (matrix(i,j) != 0) {
+                addEdge(Edge(i,j));
+            }
+        }
+    }
+}
+
+AdjacencyListGraph::AdjacencyListGraph() = default;
 
 void AdjacencyListGraph::addVertex(const int &vertex) {
     if (!adjacencyList.contains(vertex)) {
@@ -197,6 +215,7 @@ int AdjacencyListGraph::getDegree(const int &vertex) const {
 
 
 void AdjacencyListGraph::printGraph() {
+    std::cout << "Printing graph: " << std::endl;
     for (const auto& it: adjacencyList) {
         std::cout << "[ " << it.first << " ]:" << std::endl;;
         for (const Edge e: it.second) {

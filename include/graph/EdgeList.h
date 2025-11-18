@@ -8,7 +8,7 @@
 #include <utility>
 
 #include "Graph.h"
-#include "../include/graph/Edge.h"
+#include "Edge.h"
 
 struct EdgeList {
     std::map<Edge, int>  edge_map;

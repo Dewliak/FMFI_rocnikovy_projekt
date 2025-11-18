@@ -12,7 +12,7 @@
 #include "graph/IGraph.h"
 
 
-class ColoringSAT {
+class  ColoringSAT {
 public:
     ColoringSAT(const IGraph& g, int color_count=3);
     ColoringSAT(const ColoringSAT&) = delete;

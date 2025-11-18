@@ -2,7 +2,8 @@
 // Created by dewliak on 10/29/25.
 //
 
-#include <../include/graph/IGraph.h>
+#include <bitset>
+#include <graph/IGraph.h>
 #include <queue>
 #include <map>
 
@@ -57,4 +58,50 @@ namespace GraphAlgorithms {
         return answer;
 
     }
+
+
+    Matrix graph6format_to_matrix(std::string graph6format) {
+        int vertices = static_cast<int>(graph6format[0]) - 63; // (char)format[0] casts it to a signed char, we need unsigned
+
+        string all_bits = "";
+        for (int i = 1; i < graph6format.size(); i++) {
+            int value = static_cast<int>(graph6format[i]) - 63;
+            std::bitset<6> bits(value);
+            all_bits += bits.to_string();
+        }
+
+
+        Matrix matrix = Matrix(vertices,vertices);
+
+        //matrix = vector(vertices,vector<int>(vertices,0));
+
+        int num_in_bot_left_diag = 0;
+        for (int i = 0; i < vertices; i++) {
+            num_in_bot_left_diag += i;
+        }
+
+        string bot_left_diag = all_bits.substr(0, num_in_bot_left_diag);
+
+        size_t pos = 0;
+        for (int i =0; i < vertices; i++) {
+            // fill the first i with zeroes, cuz the triangle but the constructor already fills it up
+
+            for (int j = 0; j < i; j++) {
+                matrix.set(i,j,all_bits[pos++] - '0');
+                //matrix[i][j] = all_bits[pos++] - '0';
+            }
+
+        }
+        // add transpose
+        for (int i = 0; i < vertices; i++) {
+            for (int j = 0; j < i; j++) {
+                matrix.set(j,i, matrix(i,j));
+                //            matrix[j][i] = matrix[i][j];
+            }
+        }
+
+        return matrix;
+
+    }
+
 }
