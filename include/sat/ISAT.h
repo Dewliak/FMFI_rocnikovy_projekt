@@ -5,6 +5,7 @@
 #ifndef ROCNIKOVY_PROJEKT_SATINTERFACE_H
 #define ROCNIKOVY_PROJEKT_SATINTERFACE_H
 
+#include <unordered_map>
 #include <vector>
 #include <utility>
 
@@ -19,7 +20,7 @@ class ISAT {
     //virtual add(unsigned var, boolean value);
     virtual SolveResult solve()=0;
     virtual bool variable_value(int var)=0;
-
+    virtual std::vector<bool> getAnswer()=0;
     private:
 };
 

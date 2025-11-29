@@ -22,9 +22,10 @@ public:
     //virtual add(unsigned var, boolean value);
     SolveResult solve() override;
     bool variable_value(int var) override;
-private:
+    std::vector<bool> getAnswer();
 private:
     std::unique_ptr<CaDiCaL::Solver> solver;
+    int max_lit = 0;
 };
 
 

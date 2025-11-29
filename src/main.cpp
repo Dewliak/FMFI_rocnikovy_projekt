@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 #include <bitset>
+#include <filesystem>
+#include <fstream>
 
 #include "graph/AdjacencyListGraph.h"
 #include "graph/Graph.h"
@@ -76,13 +78,64 @@ def graph6ToAdj(graph6):
 int main() {
 
     string format = "C~";
-    AdjacencyListGraph graph(format);
+    //AdjacencyListGraph graph(format);
     //AdjacencyListGraph graph;
 
+    std::vector<std::string> filenames = {"/home/dewliak/CLionProjects/rocnikovy_projekt/data/4_edge_critical_snarks.10.g6"};
+    std::cout << "Working dir: "
+             << std::filesystem::current_path() << "\n";
+    for (std::string filename : filenames) {
+        std::ifstream file(filename);
+
+        cout << "file is opened: " << filename << endl;
+        string s;
+        int graph_counter = 1;
+        while (getline(file, s)) {
+            std::cout << "Graph #" << graph_counter << "  loaded " << std::endl;
 
 
 
-    graph.printGraph();
+            AdjacencyListGraph  myGraph(s);
+            myGraph.printGraph();
+            std::cout << "Graph #" << graph_counter << "  constructed " << std::endl;
+
+            myGraph.removeEdge(Edge(0,4));
+            myGraph.removeEdge(Edge(0,6));
+            myGraph.removeEdge(Edge(0,8));
+
+            myGraph.removeEdge(Edge(4,2));
+            myGraph.removeEdge(Edge(4,5));
+
+            //myGraph.removeVertex(0);
+            //myGraph.removeVertex(4);
+
+            ColoringSAT myColoringSAT(myGraph,3);
+
+            vector<Edge> edge_list =  myGraph.getEdgeList().getEdgeList();
+            std::cout << "SAT constructed" << std::endl;
+            myColoringSAT.encodeConstraints();
+            if (myColoringSAT.solve()) {
+                std::cout << "SAT solved" << std::endl;
+                int index = 0;
+                for (int i: myColoringSAT.getColoring()) {
+                    cout << "[ " << edge_list.at(index).getFirst() << " - " <<  edge_list.at(index).getSecond() << " ] : " << i << endl;
+                    index++;
+                }
+
+
+            }
+            else {
+                std::cout << "SAT failed" << std::endl;
+            }
+            graph_counter++;
+            //EdgeList
+
+        }
+
+        file.close();
+
+
+    }
 
     return 0;
 }

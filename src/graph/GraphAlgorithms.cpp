@@ -2,11 +2,13 @@
 // Created by dewliak on 10/29/25.
 //
 
+#include <algorithm>
 #include <bitset>
 #include <graph/IGraph.h>
 #include <queue>
 #include <map>
-
+#include <stdexcept>
+#include <generator>
 namespace GraphAlgorithms {
 
     int shortest_cycle(const IGraph& graph) {
@@ -102,6 +104,38 @@ namespace GraphAlgorithms {
 
         return matrix;
 
+    }
+
+    set<vector<Edge>> getGraphsWithoutKEdges(const IGraph& graph, int k ) {
+
+
+
+        vector<Edge> edge_list = graph.getEdgeList().edge_list;
+
+        if (k > edge_list.size()) {
+            throw  std::runtime_error("k (the number of edges to exclude), has to be smaller then the number of edges");
+        }
+
+        vector<bool> edges_included = vector(edge_list.size(), true);
+        for (int i =0; i < k;i++) {
+            edges_included[i] = false;
+        }
+
+        set<vector<Edge>> all_possibilities = {};
+
+        do {
+            vector<Edge> included = {};
+            for (int i =0; i < edge_list.size(); i++) {
+                if (edges_included[i]) {
+                    included.push_back(edge_list[i]);
+                }
+            }
+
+            all_possibilities.insert(included);
+
+        }while (std::next_permutation(edges_included.begin(), edges_included.end()));
+
+        return all_possibilities;
     }
 
 }

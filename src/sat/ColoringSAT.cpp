@@ -91,17 +91,18 @@ bool ColoringSAT::solve() {
 }
 
 std::vector<int> ColoringSAT::getColoring() {
+    // the answer is in the EdgeList format
     if (!satisfied) {
         return {};
     }
-    vector<int> colors = vector<int>(graph.getVertexCount(), -1);
-    for (int i = 0; i < graph.getVertexCount(); i++) {
-        for (int k = 0; k < numColors;k++) {
-            cout << i << " - " << k << ": " << satSolver->variable_value(var(i,k)) << endl;
+    vector<Edge> edge_list = graph.getEdgeList().getEdgeList();
+
+    vector<int> colors = vector<int>(edge_list.size(), -1);
+    for (int i = 0; i < edge_list.size(); i++) {
+        for (int k = 0; k < numColors; k++) {
+            //cout << "[ " << edge_list.at(i).getFirst() << " - " <<  edge_list.at(i).getSecond() << " ] : " << " - " << k << ": " << satSolver->variable_value(var(i,k)) << endl;
             if (satSolver->variable_value(var(i,k))) {
-
                 colors[i] = k;
-
             }
         }
     }
