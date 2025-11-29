@@ -8,7 +8,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # --- CaDiCaL ---
 include_directories(${CADICAL_DIR}/src)
-link_directories(${CAIDCAL_DIR}/build)
+link_directories(${CADICAL_DIR}/build)
 add_library(graph_lib
         src/graph/AdjacencyListGraph.cpp
         src/graph/EdgeList.cpp
@@ -60,7 +60,6 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(MyTests
-        tests/test_main.cpp
         tests/test_graph_coloring.cpp
         tests/test_igraph.cpp
 )

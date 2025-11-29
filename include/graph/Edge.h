@@ -6,6 +6,7 @@
 #define ROCNIKOVY_PROJEKT_EDGE_H
 
 #include <set>
+#include <set>
 
 struct Edge {
     int first;
@@ -20,6 +21,7 @@ struct Edge {
     int getFirst() const{return first;}
     int getSecond() const{return second;}
 
+
     std::set<int> getVertices() const {
         return std::set<int>({first, second});
     }
@@ -33,6 +35,21 @@ struct Edge {
         return second < other.second;
     }
 };
+
+namespace std {
+    template<>
+    struct hash<Edge> {
+        size_t operator()(const Edge& e) const noexcept {
+            int v1 = std::min(e.first, e.second);
+            int v2 = std::max(e.first, e.second);
+
+            return std::hash<long long>()(
+                (static_cast<long long>(v1) << 32) ^ static_cast<unsigned long long>(v2)
+            );
+        }
+    };
+}
+
 
 
 #endif //ROCNIKOVY_PROJEKT_EDGE_H

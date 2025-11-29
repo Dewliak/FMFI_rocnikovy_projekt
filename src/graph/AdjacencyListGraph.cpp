@@ -20,10 +20,29 @@ AdjacencyListGraph::AdjacencyListGraph(Matrix matrix) {
     for (int i =0; i < matrix.get_row_count(); i++) {
         for (int j = i+1; j < matrix.get_col_count(); j++) {
             if (matrix(i,j) != 0) {
-                addEdge(Edge(i,j));
+                AdjacencyListGraph::addEdge(Edge(i,j));
             }
         }
     }
+}
+
+AdjacencyListGraph::AdjacencyListGraph(std::vector<Edge> edges) {
+    // TODO: test this constructor
+
+    for (Edge e: edges) {
+        int v1 = e.getFirst();
+        int v2 = e.getSecond();
+
+        if (!AdjacencyListGraph::containsVertex(v1)) {
+            AdjacencyListGraph::addVertex(v1);
+        }
+        if (!AdjacencyListGraph::containsVertex(v2)) {
+            AdjacencyListGraph::addVertex(v2);
+        }
+        AdjacencyListGraph::addEdge(e);
+    }
+
+
 }
 
 AdjacencyListGraph::AdjacencyListGraph() = default;
