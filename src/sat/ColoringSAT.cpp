@@ -11,6 +11,7 @@
 #include <iostream>
 #include <ostream>
 #include <memory>
+#include <ranges>
 
 
 ColoringSAT::ColoringSAT(const IGraph& g, int color_count): graph(g), numColors(color_count) {
@@ -87,6 +88,28 @@ bool ColoringSAT::solve() {
         return true;
     }
     return false;
+
+}
+
+std::vector<std::vector<int>> ColoringSAT::getAllColoring() {
+    vector<vector<int>> all_answers = {};
+
+    vector<Edge> edges = graph.getEdgeList().getEdgeList();
+    vector<pair<int,bool>> clause = vector<pair<int,bool>>();
+    while (ColoringSAT::solve()) {
+        vector<int> solution = getColoring();
+
+        all_answers.push_back(solution);
+
+        for (int i =0; i < solution.size(); i++) {
+            clause.emplace_back(var(i,solution[i]),false);
+        }
+
+        satSolver->add_clause(clause);
+        clause.clear();
+    }
+
+    return all_answers;
 
 }
 

@@ -87,7 +87,7 @@ int hamming_distance(vector<pair<Edge,int>> major_edges, vector<pair<Edge,int>> 
     for (pair<Edge,int> minor_edge: minor_edges) {
         if (!colors.contains(minor_edge.first)) {
             distance++;
-            continue;
+            continue;ľ+š
         }
 
         if (colors[minor_edge.first] != minor_edge.second) {
@@ -170,6 +170,30 @@ void func(string graph6format, int vertex1, int vertex2) {
 
         vector<pair<Edge,int>> defected_edge_list_color = {};
         vector<Edge> defected_edge_list =  defected_graph.getEdgeList().getEdgeList();
+
+        int col_counter = 0;
+        for (const vector<int>& def_col : defected_coloring.getAllColoring()) {
+            defected_edge_list_color.clear();
+            int index = 0;
+            for (int i: def_col) {
+                defected_edge_list_color.emplace_back(defected_edge_list.at(index), i);
+                index++;
+            }
+            //cout << "col_counter: " << col_counter << endl;
+            col_counter++;
+            int h_distance = hamming_distance(edge_list_color,defected_edge_list_color);
+            // find minimum differnece - Hamming distance
+
+            if (h_distance < min_h_distance) {
+
+                min_h_distance = h_distance;
+
+                minEdges = defected_edge_list_color;
+
+
+            }
+        }
+        /*
         if (defected_coloring.solve()) {
             //std::cerr << "SAT solved" << std::endl;
             int index = 0;
@@ -191,7 +215,9 @@ void func(string graph6format, int vertex1, int vertex2) {
 
             }
 
+
         }
+        */
 
 
 
@@ -222,8 +248,8 @@ int main() {
     string format = "C~";
     //AdjacencyListGraph graph(format);
     //AdjacencyListGraph graph;
-
-    std::vector<std::string> filenames = {"/home/dewliak/CLionProjects/FMFI_rocnikovy_projekt/data/4_edge_critical_snarks.20.g6"};
+    //"/home/dewliak/CLionProjects/rocnikovy_projekt/data/4_edge_critical_snarks.10.g6" // old full path
+    std::vector<std::string> filenames = {"../data/4_edge_critical_snarks.18.g6"};
     std::cout << "Working dir: "
              << std::filesystem::current_path() << "\n";
     for (std::string filename : filenames) {

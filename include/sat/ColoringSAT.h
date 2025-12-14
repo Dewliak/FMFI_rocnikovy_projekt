@@ -20,7 +20,9 @@ public:
 
     void encodeConstraints();
     bool solve();
-    std::vector<int> getColoring(); // solution mapping vertex -> color
+    std::vector<int> getColoring();
+    // solution mapping vertex -> color
+    std::vector<std::vector<int>> getAllColoring();
 private:
     void node_atleast_one_color(); // constraint
     void no_multiple_colors_of_node(); // constraint

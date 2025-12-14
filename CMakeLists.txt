@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 20)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # --- CaDiCaL ---
-include_directories(${CADICAL_DIR}/src)
+include_directories(${CADIC1AL_DIR}/src)
 link_directories(${CADICAL_DIR}/build)
 add_library(graph_lib
         src/graph/AdjacencyListGraph.cpp
