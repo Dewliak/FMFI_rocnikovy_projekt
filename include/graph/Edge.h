@@ -6,13 +6,24 @@
 #define ROCNIKOVY_PROJEKT_EDGE_H
 
 #include <set>
-#include <set>
+#include <functional>
+#include <algorithm>
 
 struct Edge {
     int first;
     int second;
 
-    Edge( int va, int vb) : first(va), second(vb) {};
+    Edge() = default;
+    Edge( int va, int vb){
+        if (va < vb) { //normalization first < second
+            first = va;
+            second = vb;
+        }
+        else {
+            first = vb;
+            second = va;
+        }
+    };
 
     static Edge create( int va,  int vb) {
         return Edge(va, vb);

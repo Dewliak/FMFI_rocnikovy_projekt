@@ -7,73 +7,49 @@
 #include <fstream>
 
 #include "graph/AdjacencyListGraph.h"
-#include "graph/Graph.h"
 #include "sat/ColoringSAT.h"
 #include <cassert>
 
 #include "graph/GraphAlgorithms.h"
+
+
+#include "defect_search/structures.h"
+#include "defect_search/assignmentGeneration.h"
+#include "defect_search/defectComputing.h"
+#include "defect_search/utilities.h"
+
+#include "export/exportPython.h"
+
 using namespace std;
-/*
-def graph6ToAdj(graph6):
-    # vertices + 63 = first char
-    vertices = ord(graph6[0]) - 63
-
-    bin_list = ""
-
-    # Turn into 6 bit pieces
-    for i in graph6[1:]:
-        bin_list += ("{0:06b}".format(ord(i) - 63))
-
-    adjMatrix = []
-
-    # Unpad on right until have bottom left diag
-    num_in_bot_left_diag = 0
-    for i in range(vertices):
-        num_in_bot_left_diag += i
-
-    bot_left_diag = bin_list[:num_in_bot_left_diag]
-
-    for i in range(0, vertices):
-        sub_adjMatrix = [0 for i in range(vertices)]
-        for j in range(i):
-            sub_adjMatrix[j] = int(bin_list[0])
-            bin_list = bin_list[1:]
-        adjMatrix.append(sub_adjMatrix)
-
-    addTranspose(adjMatrix)
-
-    return vertices, adjMatrix
 
 
 
 
-    // Variables are represented by positive integers: 1, 2, 3...
-    // Negative integers represent negation
-    // Example: (x1 ∨ x2) ∧ (¬x1 ∨ x2)
+vector<Solution> solutions;
 
-    // Clause 1: x1 ∨ x2
-    solver.add(1);
-    solver.add(2);
-    solver.add(0); // 0 terminates the clause
 
-    // Clause 2: ¬x1 ∨ x2
-    solver.add(-1);
-    solver.add(2);
-    solver.add(0);
-
-    // Solve
-    bool sat = solver.solve();
-
-    std::cout << (sat ? "SATISFIABLE" : "UNSATISFIABLE") << std::endl;
-
-    // If SAT, get assignments
-    if (sat) {
-        std::cout << "x1 = " << solver.val(1)
-                  << ", x2 = " << solver.val(2) << std::endl;
+void printMatchings(const std::set<Edge>& M1,
+                    const std::set<Edge>& M2,
+                    const std::set<Edge>& M3)
+{
+    std::cout << "Matching M1:\n";
+    for(const Edge& e: M1) {
+        std::cout << "(" << e.getFirst() << "," << e.getSecond() << ") ";
     }
+    std::cout << "\n";
 
- */
+    std::cout << "Matching M2:\n";
+    for(const Edge& e: M2) {
+        std::cout << "(" << e.getFirst() << "," << e.getSecond() << ") ";
+    }
+    std::cout << "\n";
 
+    std::cout << "Matching M3:\n";
+    for(const Edge& e: M3) {
+        std::cout << "(" << e.getFirst() << "," << e.getSecond() << ") ";
+    }
+    std::cout << "\n";
+}
 
 int hamming_distance(vector<pair<Edge,int>> major_edges, vector<pair<Edge,int>> minor_edges) {
     // the major edges are the constant one, in the model the G', so the graph without the defect
@@ -87,7 +63,7 @@ int hamming_distance(vector<pair<Edge,int>> major_edges, vector<pair<Edge,int>> 
     for (pair<Edge,int> minor_edge: minor_edges) {
         if (!colors.contains(minor_edge.first)) {
             distance++;
-            continue;ľ+š
+            continue;
         }
 
         if (colors[minor_edge.first] != minor_edge.second) {
@@ -101,21 +77,36 @@ int hamming_distance(vector<pair<Edge,int>> major_edges, vector<pair<Edge,int>> 
 
 
 void func(string graph6format, int vertex1, int vertex2) {
-    // func
-    // check if graph_has edge uv
 
-    int min_h_distance = 10e6;
+    //int min_h_distance = 10e6;
     vector<pair<Edge,int>> minEdges = {};
 
-    AdjacencyListGraph graph(graph6format);
+    AdjacencyListGraph original_graph(graph6format);
 
-    if (!graph.containsEdge(Edge(vertex1,vertex2))) {
+    vector<int> neighbours_v1 = {}; // neighbours of vertex1
+    vector<int> neighbours_v2 = {}; // neighbours of vertex2
+
+    /**
+         * 1. Check constrains
+         *
+         *  does graph has edge u-v
+    */
+
+    EdgeList og_edge_list = original_graph.getEdgeList();
+
+
+    if (!original_graph.containsEdge(Edge(vertex1,vertex2))) {
         throw runtime_error("No such edge");
     }
 
-    if (!graph.containsVertex(vertex1) || !graph.containsVertex(vertex2)) {
+    if (!original_graph.containsVertex(vertex1) || !original_graph.containsVertex(vertex2)) {
         throw runtime_error("No vertex1 or vertex2");
     }
+
+    /**
+         * 2. Remove vertices u,v and all of its neighborous edges
+         *  since we are adjusting the original(we dont make a new copy) G will remain that new graph
+    */
 
     // Create G' = G - {vertex1,vertex2}
 
@@ -123,20 +114,42 @@ void func(string graph6format, int vertex1, int vertex2) {
 
     // remove all edges of vertex1 and vertex2 in
 
+    // store neightbours
+    for (int neighbour: G.getNeighborVertices(vertex1)) {
+        if (neighbour == vertex2) continue;
+        neighbours_v1.push_back(neighbour);
+    }
 
-     for (Edge e: G.getNeighborEdges(vertex1)){
+    for (int neighbour: G.getNeighborVertices(vertex2)) {
+        if (neighbour == vertex1) continue;
+        neighbours_v2.push_back(neighbour);
+    }
+
+    vector<Edge> deleted_edges = {};
+    for (Edge e: G.getNeighborEdges(vertex1)){
+
+
+         deleted_edges.push_back(e); // save edges so we can restore later
          G.removeEdge(e);
      }
 
     for (Edge e: G.getNeighborEdges(vertex2)) {
+        deleted_edges.push_back(e); // save edges so we can restore later
         G.removeEdge(e);
     }
 
-    //assert
+    //G.removeVertex(vertex1);
+    //G.removeVertex(vertex2);
+
+
+
+    /**
+         * 3. Find coloring for G
+         *  since it was a critical snark it should have, if not throw error
+    */
 
     // Find coloring G' => EdgeList
     ColoringSAT myColoringSAT(G,3);
-
     vector<Edge> edge_list =  G.getEdgeList().getEdgeList();
 
     myColoringSAT.encodeConstraints();
@@ -156,155 +169,132 @@ void func(string graph6format, int vertex1, int vertex2) {
         assert(false); // shouldnt fail the sat
     }
 
-    // Find every cooring with defect 3
-    static int DEFECT = 3;
-    for (vector<Edge> defected_edges: GraphAlgorithms::getGraphsWithoutKEdges(graph,DEFECT)) {
-        AdjacencyListGraph defected_graph(defected_edges);
+    set<Edge> M1 = {}, M2 = {}, M3 = {}; // create matchings sets
 
-        ColoringSAT defected_coloring(defected_graph,3);
-        defected_coloring.encodeConstraints();
-
-        defected_coloring.solve();
-
-        // make it ALLSAT;
-
-        vector<pair<Edge,int>> defected_edge_list_color = {};
-        vector<Edge> defected_edge_list =  defected_graph.getEdgeList().getEdgeList();
-
-        int col_counter = 0;
-        for (const vector<int>& def_col : defected_coloring.getAllColoring()) {
-            defected_edge_list_color.clear();
-            int index = 0;
-            for (int i: def_col) {
-                defected_edge_list_color.emplace_back(defected_edge_list.at(index), i);
-                index++;
-            }
-            //cout << "col_counter: " << col_counter << endl;
-            col_counter++;
-            int h_distance = hamming_distance(edge_list_color,defected_edge_list_color);
-            // find minimum differnece - Hamming distance
-
-            if (h_distance < min_h_distance) {
-
-                min_h_distance = h_distance;
-
-                minEdges = defected_edge_list_color;
-
-
-            }
+    for (pair<Edge,int> edge_pair: edge_list_color) {
+        switch (edge_pair.second) {
+            case 0:
+                M1.insert(edge_pair.first);
+                break;
+            case 1:
+                M2.insert(edge_pair.first);
+                break;
+            case 2:
+                M3.insert(edge_pair.first);
+                break;
+            default: ;
         }
-        /*
-        if (defected_coloring.solve()) {
-            //std::cerr << "SAT solved" << std::endl;
-            int index = 0;
-            for (int i: defected_coloring.getColoring()) {
-                defected_edge_list_color.push_back(std::make_pair(defected_edge_list.at(index), i));
-                index++;
-            }
-
-
-            int h_distance = hamming_distance(edge_list_color,defected_edge_list_color);
-            // find minimum differnece - Hamming distance
-
-            if (h_distance < min_h_distance) {
-
-                min_h_distance = h_distance;
-
-                minEdges = defected_edge_list_color;
-
-
-            }
-
-
-        }
-        */
-
-
-
     }
 
 
+    map<int,int> vertex_missing_color = {};
 
-    cout << "RESULTS:" << endl;
-
-    cout << "ORIGINAL GRAPH: " << endl;
-    graph.printGraph();
-    cout << "========================" << endl;
-    cout << "CLOSEST COLORING: " << min_h_distance << " " << minEdges.size() <<  endl;
-
-
-    for (pair<Edge,int> edge: minEdges) {
-        cout << "[ " << edge.first.getFirst() << ", " << edge.first.getSecond() << " ] - "  << edge.second << endl;
+    for (int vertex: neighbours_v1) {
+        vertex_missing_color[vertex] = getMissingVertexColor(vertex, G, M1, M2, M3);
     }
 
+    for (int vertex: neighbours_v2) {
+        vertex_missing_color[vertex] = getMissingVertexColor(vertex, G, M1, M2, M3);
+    }
+
+
+    cout << M1.size() <<  " " << M2.size() << " " << M3.size() << endl;
+
+
+    /**
+         * 4. Readd the vertices u,v
+         *
+         */
+
+    G.addVertex(vertex1);
+    G.addVertex(vertex2);
+
+    for (Edge edge: deleted_edges) {
+        G.addEdge(edge);
+    }
+
+    /**
+     * 5. Find
+     */
+    vector<Solution> solutions = {};
+
+    solutions = extendMatchings(G,vertex1,vertex2,M1,M2,M3);
+
+    for (auto solution : solutions) {
+        printMatchings(solution.M1,solution.M2,solution.M3);
+        break;
+    }
+
+
+    // Export for visualization
+
+    Solution original_solution;
+
+    original_solution.M1 = M1;
+    original_solution.M2 = M2;
+    original_solution.M3 = M3;
+
+    exportPython(original_solution, "../export_data/original_sol.txt", og_edge_list.edge_list, true);
+
+    for (Solution solution : solutions) {
+        exportPython(solution,"../export_data/sol.txt",og_edge_list.edge_list, false);
+        break;
+    }
+
+
+    // DEBUG:
+    cout << "Found coloring: " << endl;
+    for (pair<Edge,int> edge_pair: edge_list_color) {
+        cout << "( " << edge_pair.first.getFirst() << " - " << edge_pair.first.getSecond() << " ) : " << edge_pair.second << endl;
+    }
 
 }
 
 
 
+#
+
+
+#define DEBUG_SINGLE_GRAPH 1
 
 int main() {
 
+#if DEBUG_SINGLE_GRAPH
+
+    std::string s = "Y?HI@eOGG??B_??@g???T?a??@k?????CO?????gO?????L@??O???E_"; //"Q?hY@eOGG??B_??@g???T?a??@g";   // your test graph6 string
+    std::cout << "Running single test graph\n";
+    func(s, 1, 5);
+
+#else
+
     string format = "C~";
-    //AdjacencyListGraph graph(format);
-    //AdjacencyListGraph graph;
-    //"/home/dewliak/CLionProjects/rocnikovy_projekt/data/4_edge_critical_snarks.10.g6" // old full path
+
     std::vector<std::string> filenames = {"../data/4_edge_critical_snarks.18.g6"};
+
     std::cout << "Working dir: "
-             << std::filesystem::current_path() << "\n";
+              << std::filesystem::current_path() << "\n";
+
     for (std::string filename : filenames) {
+
         std::ifstream file(filename);
 
-        cout << "file is opened: " << filename << endl;
+        std::cout << "file is opened: " << filename << std::endl;
+
         string s;
         int graph_counter = 1;
+
         while (getline(file, s)) {
-            std::cout << "Graph #" << graph_counter << "  loaded " << std::endl;
+
+            std::cout << "Graph #" << graph_counter << " loaded" << std::endl;
 
             func(s,0,4);
 
-            /*
-            AdjacencyListGraph  myGraph(s);
-            myGraph.printGraph();
-            std::cout << "Graph #" << graph_counter << "  constructed " << std::endl;
-
-            myGraph.removeEdge(Edge(0,4));
-            myGraph.removeEdge(Edge(0,6));
-            myGraph.removeEdge(Edge(0,8));
-
-            myGraph.removeEdge(Edge(4,2));
-            myGraph.removeEdge(Edge(4,5));
-
-            //myGraph.removeVertex(0);
-            //myGraph.removeVertex(4);
-
-            ColoringSAT myColoringSAT(myGraph,3);
-
-            vector<Edge> edge_list =  myGraph.getEdgeList().getEdgeList();
-            std::cout << "SAT constructed" << std::endl;
-            myColoringSAT.encodeConstraints();
-            if (myColoringSAT.solve()) {
-                std::cout << "SAT solved" << std::endl;
-                int index = 0;
-                for (int i: myColoringSAT.getColoring()) {
-                    cout << "[ " << edge_list.at(index).getFirst() << " - " <<  edge_list.at(index).getSecond() << " ] : " << i << endl;
-                    index++;
-                }
-
-
-            }
-            else {
-                std::cout << "SAT failed" << std::endl;
-            }
             graph_counter++;
-            //EdgeList
-            */
         }
 
         file.close();
-
-
     }
 
-    return 0;
+#endif
+
 }

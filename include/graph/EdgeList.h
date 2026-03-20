@@ -15,7 +15,10 @@ struct EdgeList {
     std::vector<Edge> edge_list;
 
     EdgeList(const std::vector<std::vector<int>> &two_dimensional_array);
-
+    EdgeList() {
+        edge_map = {};
+        edge_list = {};
+    }
     //explicit EdgeList(const Graph &graph);
     EdgeList(std::map<Edge, int>  graph_edge_map, std::vector<Edge> graph_edge_list);
     //EdgeList(std::map<);

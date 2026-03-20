@@ -216,7 +216,8 @@ int AdjacencyListGraph::getVertexCount() const {
 }
 
 int AdjacencyListGraph::getEdgeCount() const {
-    // TODO: might be buggy, because I assume that there is even number of edges, that should be
+    // TODO: might be buggy, because I assume that there is even number of edges, because we
+    // we are counting eveything twice, that should be
 
     int amount = 0;
     for (const auto& it: adjacencyList) {

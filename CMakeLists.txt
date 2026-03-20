@@ -14,6 +14,15 @@ add_library(graph_lib
         src/graph/EdgeList.cpp
         src/graph/Graph.cpp
         src/graph/GraphAlgorithms.cpp
+        include/defect_search/structures.h
+        include/defect_search/utilities.h
+        src/defect_search/utilities.cpp
+        src/defect_search/defectComputing.cpp
+        include/defect_search/defectComputing.h
+        include/defect_search/assignmentGeneration.h
+        src/defect_search/assignmentGeneration.cpp
+        include/export/exportPython.h
+        src/export/exportPython.cpp
 )
 
 # ---------- SAT library ----------
