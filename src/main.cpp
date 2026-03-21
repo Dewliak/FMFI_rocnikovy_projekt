@@ -19,6 +19,7 @@
 #include "defect_search/utilities.h"
 
 #include "export/exportPython.h"
+#include "sat/DefectSAT.h"
 
 using namespace std;
 
@@ -170,35 +171,14 @@ void func(string graph6format, int vertex1, int vertex2) {
     }
 
     set<Edge> M1 = {}, M2 = {}, M3 = {}; // create matchings sets
-
-    for (pair<Edge,int> edge_pair: edge_list_color) {
-        switch (edge_pair.second) {
-            case 0:
-                M1.insert(edge_pair.first);
-                break;
-            case 1:
-                M2.insert(edge_pair.first);
-                break;
-            case 2:
-                M3.insert(edge_pair.first);
-                break;
-            default: ;
-        }
+    map<int,int> baseline;
+    for (int i = 0; i < edge_list_color.size(); i++) {
+        baseline[i] = edge_list_color[i].second;
     }
 
 
-    map<int,int> vertex_missing_color = {};
-
-    for (int vertex: neighbours_v1) {
-        vertex_missing_color[vertex] = getMissingVertexColor(vertex, G, M1, M2, M3);
-    }
-
-    for (int vertex: neighbours_v2) {
-        vertex_missing_color[vertex] = getMissingVertexColor(vertex, G, M1, M2, M3);
-    }
 
 
-    cout << M1.size() <<  " " << M2.size() << " " << M3.size() << endl;
 
 
     /**
@@ -206,46 +186,26 @@ void func(string graph6format, int vertex1, int vertex2) {
          *
          */
 
-    G.addVertex(vertex1);
-    G.addVertex(vertex2);
+
+    EdgeList modifiedGraphEdgeList = G.getEdgeList();
 
     for (Edge edge: deleted_edges) {
-        G.addEdge(edge);
+        modifiedGraphEdgeList.addEdge(edge); // we put the deleted edges back to the edge list, this way it stil be compatible
+        // but it might not be if we used the original graph and it's own edgelsit, since the deleted
+        // edges fro mthe edges might've been in the middle
     }
 
-    /**
-     * 5. Find
-     */
-    vector<Solution> solutions = {};
-
-    solutions = extendMatchings(G,vertex1,vertex2,M1,M2,M3);
-
-    for (auto solution : solutions) {
-        printMatchings(solution.M1,solution.M2,solution.M3);
-        break;
-    }
-
-
-    // Export for visualization
-
-    Solution original_solution;
-
-    original_solution.M1 = M1;
-    original_solution.M2 = M2;
-    original_solution.M3 = M3;
-
-    exportPython(original_solution, "../export_data/original_sol.txt", og_edge_list.edge_list, true);
-
-    for (Solution solution : solutions) {
-        exportPython(solution,"../export_data/sol.txt",og_edge_list.edge_list, false);
-        break;
-    }
-
-
-    // DEBUG:
-    cout << "Found coloring: " << endl;
-    for (pair<Edge,int> edge_pair: edge_list_color) {
-        cout << "( " << edge_pair.first.getFirst() << " - " << edge_pair.first.getSecond() << " ) : " << edge_pair.second << endl;
+    // iterative deepening
+    for (int k = 0; k <= (int)og_edge_list.size(); k++) {
+        DefectSAT defectSAT(original_graph, modifiedGraphEdgeList, baseline);  // fresh solver each k
+        if (defectSAT.solveAtDistance(k)) {
+            cout << "Solved at distance: " << k << endl;
+            Solution r = defectSAT.extractSolution();
+            printMatchings(r.M1,r.M2,r.M3);
+            exportPython(r, "../export_data/sol.txt");
+            break;
+        }
+        std::cout << "No solution at Hamming distance " << k << "\n";
     }
 
 }
@@ -261,7 +221,7 @@ int main() {
 
 #if DEBUG_SINGLE_GRAPH
 
-    std::string s = "Y?HI@eOGG??B_??@g???T?a??@k?????CO?????gO?????L@??O???E_"; //"Q?hY@eOGG??B_??@g???T?a??@g";   // your test graph6 string
+    std::string s = "Q?hY@eOGG??B_??@g???T?a??@g";   // your test graph6 string
     std::cout << "Running single test graph\n";
     func(s, 1, 5);
 

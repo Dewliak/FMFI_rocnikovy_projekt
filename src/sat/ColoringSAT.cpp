@@ -20,9 +20,9 @@ ColoringSAT::ColoringSAT(const IGraph& g, int color_count): graph(g), numColors(
 
 }
 
-int ColoringSAT::var(int vertex, int color) {
+int ColoringSAT::var(int edge, int color) {
     // utility for encoding node with color
-    return vertex * numColors + color + 1;
+    return edge * numColors + color + 1;
 }
 
 void ColoringSAT::encodeConstraints() {

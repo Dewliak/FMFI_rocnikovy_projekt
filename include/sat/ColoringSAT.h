@@ -31,7 +31,7 @@ private:
     const IGraph& graph;
     bool satisfied = false;
     int numColors;
-    int var(int vertex, int color);
+    int var(int edge, int color);
     std::unique_ptr<ISAT> satSolver;
 };
 

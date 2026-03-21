@@ -22,6 +22,9 @@ struct EdgeList {
     //explicit EdgeList(const Graph &graph);
     EdgeList(std::map<Edge, int>  graph_edge_map, std::vector<Edge> graph_edge_list);
     //EdgeList(std::map<);
+
+    void addEdge(Edge edge);
+    int size();
     std::map<Edge, int> getEdgeMap() const;
     std::vector<Edge> getEdgeList() const;
 

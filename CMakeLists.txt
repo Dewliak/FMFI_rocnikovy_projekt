@@ -30,6 +30,8 @@ add_library(sat_lib
         src/sat/CadicalSAT.cpp
         src/sat/ColoringSAT.cpp
         src/sat/ISAT.cpp
+        src/sat/DefectSAT.cpp
+        include/sat/DefectSAT.h
 )
 
 target_link_libraries(sat_lib PRIVATE cadical)

@@ -27,6 +27,15 @@ EdgeList::EdgeList(std::map<Edge, int> graph_edge_map, std::vector<Edge> graph_e
     edge_map = graph_edge_map;
 }
 
+void EdgeList::addEdge(Edge edge) {
+    edge_map[edge] = edge_list.size();
+    edge_list.push_back(edge);
+}
+
+int EdgeList::size() {
+    return edge_list.size();
+}
+
 /*
 EdgeList::EdgeList(const Graph &graph) {
     edge_list = {};
