@@ -9,6 +9,7 @@
 #include "graph/AdjacencyListGraph.h"
 #include "sat/ColoringSAT.h"
 #include <cassert>
+#include <ranges>
 
 #include "graph/GraphAlgorithms.h"
 
@@ -75,6 +76,37 @@ int hamming_distance(vector<pair<Edge,int>> major_edges, vector<pair<Edge,int>> 
     return distance;
 }
 
+int hammingDistanceForDefect(Solution original, Solution defect) {
+    auto allEdges = [](const Solution& sol) {
+        std::set<Edge> edges;
+        for (const Edge& e : sol.M1) edges.insert(e);
+        for (const Edge& e : sol.M2) edges.insert(e);
+        for (const Edge& e : sol.M3) edges.insert(e);
+        return edges;
+    };
+
+    int distance = 0;
+
+    set<Edge> originalEdges = allEdges(original);
+
+    for (const Edge& e: originalEdges) {
+
+        if (original.M1.contains(e) !=  defect.M1.contains(e)) {
+            distance++;
+        }
+
+        if (original.M2.contains(e) !=  defect.M2.contains(e)) {
+            distance++;
+        }
+
+        if (original.M3.contains(e) !=  defect.M3.contains(e)) {
+            distance++;
+        }
+
+    }
+
+    return distance;
+}
 
 
 void func(string graph6format, int vertex1, int vertex2) {
@@ -176,7 +208,39 @@ void func(string graph6format, int vertex1, int vertex2) {
         baseline[i] = edge_list_color[i].second;
     }
 
+    for (pair<Edge,int> edge_pair: edge_list_color) {
+        switch (edge_pair.second) {
+            case 0:
+                M1.insert(edge_pair.first);
+                break;
+            case 1:
+                M2.insert(edge_pair.first);
+                break;
+            case 2:
+                M3.insert(edge_pair.first);
+                break;
+            default: ;
+        }
+    }
 
+
+
+    cout << M1.size() <<  " " << M2.size() << " " << M3.size() << endl;
+
+
+    /**
+         * 4. Readd the vertices u,v
+         *
+         */
+
+
+    Solution original_solution;
+
+    original_solution.M1 = M1;
+    original_solution.M2 = M2;
+    original_solution.M3 = M3;
+
+    exportPython(original_solution, "../export_data/original_sol.txt", og_edge_list.edge_list, true);
 
 
 
@@ -196,21 +260,41 @@ void func(string graph6format, int vertex1, int vertex2) {
     }
 
     // iterative deepening
+
+    /*
     for (int k = 0; k <= (int)og_edge_list.size(); k++) {
         DefectSAT defectSAT(original_graph, modifiedGraphEdgeList, baseline);  // fresh solver each k
         if (defectSAT.solveAtDistance(k)) {
             cout << "Solved at distance: " << k << endl;
             Solution r = defectSAT.extractSolution();
             printMatchings(r.M1,r.M2,r.M3);
-            exportPython(r, "../export_data/sol.txt");
+            cout << "CALCULATED HAMMING: " << hammingDistanceForDefect(original_solution,r) << endl;
+            exportPython(r, "../export_data/sol.txt", og_edge_list.edge_list, true);
             break;
         }
         std::cout << "No solution at Hamming distance " << k << "\n";
     }
+    */
+    DefectSAT defectSAT(original_graph, modifiedGraphEdgeList, baseline);  // fresh solver each k
+    vector<Solution> allSol = defectSAT.getAllSolutions();
 
+    int minHammingDistance = hammingDistanceForDefect(original_solution,allSol[0]);
+    Solution minSolution = allSol[0];
+
+    for (Solution solution: allSol) {
+        int hammingDistance = hammingDistanceForDefect(original_solution,solution);
+        if (hammingDistance < minHammingDistance) {
+            minHammingDistance = hammingDistance;
+            minSolution = solution;
+        }
+    }
+    cout << "Amount of solutions: " << allSol.size() << endl;
+    cout << "Calculated min. hammign distance: " << minHammingDistance << endl;
+    exportPython(minSolution, "../export_data/sol.txt", og_edge_list.edge_list, true);
 }
 
-
+///// SO FAR SEEMS GOOD, JUST PROBLEM WITH THE HAMMING DISTANCE, FIRST TRY MIGHT BE BETTER
+//// TO BRUTE FORCE ALL SOLUTIONS AND JUST CHECK HAMMING DISTANCE MANUALLYx
 
 #
 

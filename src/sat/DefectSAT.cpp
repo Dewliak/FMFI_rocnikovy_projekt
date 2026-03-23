@@ -16,7 +16,7 @@ DefectSAT::DefectSAT(const IGraph& g, const EdgeList& modifiedEdgeList, std::map
     encodeMatchingConstraints();
     encodeUncoveredVariables();
     encodeExactlyThreeDefect();
-    encodeChangedVariables(); // only needed if you're using Hamming distance
+    //encodeChangedVariables(); // only needed if you're using Hamming distance
 }
 
 
@@ -275,4 +275,46 @@ int DefectSAT::addAtMostK(const vector<int>& vars, int k, int firstAuxVar) {
     satSolver->add_clause(clause);
 
     return firstAuxVar + n * (k + 1); // next free variable after this block
+}
+
+void DefectSAT::addBlockingClause(const Solution& sol) {
+    // forbid this exact membership assignment for every edge in every matching
+    // clause: at least one of the current true variables must flip
+    vector<pair<int,bool>> clause;
+    vector<Edge> edges = edgeList.getEdgeList();
+
+    for (int i = 0; i < numEdges; i++) {
+        Edge e = edges[i];
+        // for each matching, negate whatever is currently true
+        bool inM1 = sol.M1.contains(e);
+        bool inM2 = sol.M2.contains(e);
+        bool inM3 = sol.M3.contains(e);
+
+        // if b[i][m] is true in this solution, add ¬b[i][m] to the blocking clause
+        // if b[i][m] is false in this solution, add b[i][m] to the blocking clause
+        // together this forces at least one variable to differ from current assignment
+        clause.emplace_back(var(i, 0), !inM1);
+        clause.emplace_back(var(i, 1), !inM2);
+        clause.emplace_back(var(i, 2), !inM3);
+    }
+
+    satSolver->add_clause(clause);
+}
+
+std::vector<Solution> DefectSAT::getAllSolutions() {
+    std::vector<Solution> results;
+
+    while (true) {
+        satisfied = (satSolver->solve() == SolveResult::SAT);
+        if (!satisfied) break;
+
+        Solution sol = extractSolution();
+        results.push_back(sol);
+
+        //std::cout << "Found solution " << results.size() << "\n";
+
+        addBlockingClause(sol);
+    }
+
+    return results;
 }

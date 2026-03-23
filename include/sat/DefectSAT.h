@@ -30,7 +30,7 @@ public:
     ExtractionResult extractSolution2();
     bool solve();
     std::vector<int> getSolution();
-
+    std::vector<Solution> getAllSolutions();
 private:
     EdgeList edgeList;
     map<int,int> colorBaseline;
@@ -53,6 +53,8 @@ private:
     void encodeChangedVariables();
 
     int addAtMostK(const vector<int> &vars, int k, int firstAuxVar);
+
+    void addBlockingClause(const Solution& sol);
 
     unique_ptr<ISAT> satSolver;
 };
