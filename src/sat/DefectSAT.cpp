@@ -16,7 +16,13 @@ DefectSAT::DefectSAT(const IGraph& g, const EdgeList& modifiedEdgeList, std::map
     encodeMatchingConstraints();
     encodeUncoveredVariables();
     encodeExactlyThreeDefect();
-    //encodeChangedVariables(); // only needed if you're using Hamming distance
+
+    // part of the incremental search
+    encodeChangedVariables(); // only needed if you're using Hamming distance
+    for (int i = 0; i < numEdges; i++)
+        if (colorBaseline.count(i))
+            for (int m = 0; m < 3; m++)
+                changedVarsList.push_back(changedVar(i, m));
 }
 
 
@@ -32,6 +38,61 @@ std::vector<int> DefectSAT::getSolution() {
 }
 
 
+int DefectSAT::buildAtMostKGated(const std::vector<int> &vars, int k, int firstAux) {
+    int n = vars.size();
+
+    auto s = [&](int i, int j) {
+        return firstAux + (i - 1) * (k + 1) + (j - 1);
+    };
+
+    vector<pair<int,bool>> clause;
+
+    for (int i = 1; i <= n; i++) {
+        int x = vars[i - 1];
+        for (int j = 1; j <= k + 1; j++) {
+
+            // s[i][j] → s[i-1][j]
+            if (i > 1) {
+                clause.emplace_back(s(i,   j), false);
+                clause.emplace_back(s(i-1, j), true);
+                satSolver->add_clause(clause);
+                clause.clear();
+            }
+
+            // x ∧ s[i-1][j-1] → s[i][j]
+            if (j > 1 && i > 1) {
+                clause.emplace_back(x,           false);
+                clause.emplace_back(s(i-1, j-1), false);
+                clause.emplace_back(s(i,   j),   true);
+                satSolver->add_clause(clause);
+                clause.clear();
+            }
+
+            // x → s[i][1]
+            if (j == 1) {
+                clause.emplace_back(x,       false);
+                clause.emplace_back(s(i, 1), true);
+                satSolver->add_clause(clause);
+                clause.clear();
+            }
+        }
+    }
+
+    // activation variable — sits just after the counter variables
+    int actVar = firstAux + n * (k + 1);
+
+    // gated clause: actVar → ¬s[n][k+1]
+    // written as: ¬actVar ∨ ¬s[n][k+1]
+    // meaning: IF actVar is assumed true, THEN at-most-k is enforced
+    clause.emplace_back(actVar,       false);
+    clause.emplace_back(s(n, k + 1), false);
+    satSolver->add_clause(clause);
+    clause.clear();
+
+    // return actVar so caller can assume() it
+    return actVar;
+}
+
 int DefectSAT::var(int edge, int color) {
     // utility for encoding node with color
     return edge * numColors + color + 1;
@@ -39,10 +100,13 @@ int DefectSAT::var(int edge, int color) {
 int DefectSAT::uncovVar(int i) {
     return numEdges * 3 + i + 1;
 }
-int DefectSAT::changedVar(int i) {
-    return numEdges * 4 + i + 1;
+int DefectSAT::changedVar(int i, int m) {
+    return numEdges * 4 + i * 3 + m + 1;
 }
 
+int DefectSAT::auxBase() {
+    return numEdges * 7 + 1;
+}
 
 void DefectSAT::encodeMatchingConstraints() {
     // for each matching m and each vertex v:
@@ -105,8 +169,8 @@ void DefectSAT::encodeExactlyThreeDefect() {
         uncovVars.push_back(uncovVar(i));
 
     // first aux var starts after all named vars
-    int firstAux = numEdges * 5 + 1;
-
+    int firstAux = auxBase(); // TODO: THIS WORKS in BRUTEFORCE //numEdges * 5 + 1;
+    defectCounterEnd = addAtMostK(uncovVars, 3, firstAux); // store where it ends
     // at-most-3: sequential counter
     int nextAux = addAtMostK(uncovVars, 3, firstAux);
 
@@ -132,42 +196,80 @@ void DefectSAT::encodeExactlyThreeDefect() {
 // ── changed variables ────────────────────────────────────────────────────────
 
 void DefectSAT::encodeChangedVariables() {
-    // changed(i) ↔ ¬b[i][baseline(i)]
-    // only for G' edges that appear in the baseline
     vector<pair<int,bool>> clause;
+
     for (int i = 0; i < numEdges; i++) {
-        if (!colorBaseline.count(i)) continue; // u,v edges — no baseline, skip
+        if (!colorBaseline.count(i)) continue; // u,v edges — skip
 
-        int bColor = colorBaseline.at(i);
-        int cv = changedVar(i);
-        int bv = var(i, bColor);
+        int baselineM = colorBaseline.at(i); // which matching this edge was in
 
-        // changed(i) ↔ ¬b[i][bColor]
-        // (1) ¬changed(i) ∨ ¬b[i][bColor]
-        clause.emplace_back(cv, false);
-        clause.emplace_back(bv, false);
-        satSolver->add_clause(clause);
-        clause.clear();
-        // (2) changed(i) ∨ b[i][bColor]
-        clause.emplace_back(cv, true);
-        clause.emplace_back(bv, true);
-        satSolver->add_clause(clause);
-        clause.clear();
+        for (int m = 0; m < 3; m++) {
+            int cv = changedVar(i, m);
+            int bv = var(i, m);
+
+            if (m == baselineM) {
+                // was IN this matching — changed if now NOT in it
+                // changed(i,m) ↔ ¬b[i][m]
+                clause.emplace_back(cv, false);
+                clause.emplace_back(bv, false);
+                satSolver->add_clause(clause); clause.clear();
+
+                clause.emplace_back(cv, true);
+                clause.emplace_back(bv, true);
+                satSolver->add_clause(clause); clause.clear();
+            } else {
+                // was NOT in this matching — changed if now IN it
+                // changed(i,m) ↔ b[i][m]
+                clause.emplace_back(cv, false);
+                clause.emplace_back(bv, true);
+                satSolver->add_clause(clause); clause.clear();
+
+                clause.emplace_back(cv, true);
+                clause.emplace_back(bv, false);
+                satSolver->add_clause(clause); clause.clear();
+            }
+        }
     }
 }
 
 // ── iterative deepening entry point ─────────────────────────────────────────
 
 bool DefectSAT::solveAtDistance(int k) {
-    // collect changed vars for G' edges only
-    vector<int> changedVars;
-    for (int i = 0; i < numEdges; i++)
-        if (colorBaseline.count(i))
-            changedVars.push_back(changedVar(i));
+    satSolver = std::make_unique<CadicalSAT>();
 
-    // aux vars start after changed vars block
-    int firstAux = numEdges * 5 + numEdges + 1;
-    addAtMostK(changedVars, k, firstAux);
+    encodeMatchingConstraints();
+    encodeUncoveredVariables();
+    encodeExactlyThreeDefect();
+    encodeChangedVariables();
+
+    // collect all changed(i,m) for G' edges — 3 per edge
+    vector<int> changedVars;
+    for (int i = 0; i < numEdges; i++) {
+        if (!colorBaseline.count(i)) continue;
+        for (int m = 0; m < 3; m++)
+            changedVars.push_back(changedVar(i, m));
+    }
+
+    int firstAux = auxBase();
+    defectCounterEnd = addAtMostK(changedVars, k, defectCounterEnd);
+
+    satisfied = (satSolver->solve() == SolveResult::SAT);
+    return satisfied;
+}
+
+bool DefectSAT::solveAtDistanceIncremental(int k) {
+    // build a fresh counter for this k using fresh aux variables
+    // each call to this method gets its own non-overlapping variable block
+    int actVar = buildAtMostKGated(changedVarsList, k, nextFreeVar);
+
+    // advance nextFreeVar past this counter block + the actVar itself
+    // counter uses n*(k+1) variables, actVar is one more
+    int n = changedVarsList.size();
+    nextFreeVar = actVar + 1;
+
+    // assume actVar = true for this solve call only
+    // CaDiCaL consumes the assumption after one solve() — it does not persist
+    satSolver->assume(actVar);
 
     satisfied = (satSolver->solve() == SolveResult::SAT);
     return satisfied;
@@ -231,8 +333,9 @@ Solution DefectSAT::extractSolution() {
 
 int DefectSAT::addAtMostK(const vector<int>& vars, int k, int firstAuxVar) {
     int n = vars.size();
-    // s[i][j]: "among first i vars, at least j are true"  (1-indexed both)
-    // laid out as: s[i][j] = firstAuxVar + (i-1)*(k+1) + (j-1)
+
+    // s(i,j) means "among the first i variables, at least j are true"
+    // laid out linearly: s(i,j) = firstAuxVar + (i-1)*(k+1) + (j-1)
     auto s = [&](int i, int j) {
         return firstAuxVar + (i - 1) * (k + 1) + (j - 1);
     };
@@ -241,26 +344,31 @@ int DefectSAT::addAtMostK(const vector<int>& vars, int k, int firstAuxVar) {
 
     for (int i = 1; i <= n; i++) {
         int x = vars[i - 1];
+
         for (int j = 1; j <= k + 1; j++) {
 
-            // s[i][j] → s[i-1][j]  (counter is monotone)
+            // s[i][j] → s[i-1][j]
+            // if at least j of first i are true, then at least j of first i-1 are true
             if (i > 1) {
-                clause.emplace_back(s(i, j),     false);
-                clause.emplace_back(s(i - 1, j), true);
+                clause.emplace_back(s(i,   j), false);
+                clause.emplace_back(s(i-1, j), true);
                 satSolver->add_clause(clause);
                 clause.clear();
             }
 
             // x ∧ s[i-1][j-1] → s[i][j]
+            // if x is true AND at least j-1 of first i-1 are true,
+            // then at least j of first i are true
             if (j > 1 && i > 1) {
-                clause.emplace_back(x,                false);
-                clause.emplace_back(s(i - 1, j - 1), false);
-                clause.emplace_back(s(i, j),          true);
+                clause.emplace_back(x,           false);
+                clause.emplace_back(s(i-1, j-1), false);
+                clause.emplace_back(s(i,   j),   true);
                 satSolver->add_clause(clause);
                 clause.clear();
             }
 
             // x → s[i][1]
+            // if x is true then at least 1 of first i are true
             if (j == 1) {
                 clause.emplace_back(x,       false);
                 clause.emplace_back(s(i, 1), true);
@@ -270,12 +378,19 @@ int DefectSAT::addAtMostK(const vector<int>& vars, int k, int firstAuxVar) {
         }
     }
 
-    // the core at-most-k clause: s[n][k+1] must be false
+    // the enforcement clause: s[n][k+1] must be false
+    // meaning: it is NOT the case that k+1 or more variables are true
+    // this is the actual at-most-k constraint
     clause.emplace_back(s(n, k + 1), false);
     satSolver->add_clause(clause);
+    clause.clear();
 
-    return firstAuxVar + n * (k + 1); // next free variable after this block
+    // return the first variable id after this counter block
+    // so the caller knows where free variables start
+    return firstAuxVar + n * (k + 1);
 }
+
+
 
 void DefectSAT::addBlockingClause(const Solution& sol) {
     // forbid this exact membership assignment for every edge in every matching

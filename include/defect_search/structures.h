@@ -6,7 +6,10 @@
 #define ROCNIKOVY_PROJEKT_STRUCTURES_H
 
 #include "graph/Edge.h"
-
+enum class SearchStrategy {
+    BruteForce,   // enumerate all solutions, pick min Hamming
+    Incremental   // iterative deepening with assumption-gated counter
+};
 
 struct Assignment
 {

@@ -76,40 +76,10 @@ int hamming_distance(vector<pair<Edge,int>> major_edges, vector<pair<Edge,int>> 
     return distance;
 }
 
-int hammingDistanceForDefect(Solution original, Solution defect) {
-    auto allEdges = [](const Solution& sol) {
-        std::set<Edge> edges;
-        for (const Edge& e : sol.M1) edges.insert(e);
-        for (const Edge& e : sol.M2) edges.insert(e);
-        for (const Edge& e : sol.M3) edges.insert(e);
-        return edges;
-    };
-
-    int distance = 0;
-
-    set<Edge> originalEdges = allEdges(original);
-
-    for (const Edge& e: originalEdges) {
-
-        if (original.M1.contains(e) !=  defect.M1.contains(e)) {
-            distance++;
-        }
-
-        if (original.M2.contains(e) !=  defect.M2.contains(e)) {
-            distance++;
-        }
-
-        if (original.M3.contains(e) !=  defect.M3.contains(e)) {
-            distance++;
-        }
-
-    }
-
-    return distance;
-}
 
 
-void func(string graph6format, int vertex1, int vertex2) {
+
+void func(string graph6format, int vertex1, int vertex2, SearchStrategy strategy = SearchStrategy::BruteForce) {
 
     //int min_h_distance = 10e6;
     vector<pair<Edge,int>> minEdges = {};
@@ -275,22 +245,43 @@ void func(string graph6format, int vertex1, int vertex2) {
         std::cout << "No solution at Hamming distance " << k << "\n";
     }
     */
-    DefectSAT defectSAT(original_graph, modifiedGraphEdgeList, baseline);  // fresh solver each k
-    vector<Solution> allSol = defectSAT.getAllSolutions();
 
-    int minHammingDistance = hammingDistanceForDefect(original_solution,allSol[0]);
-    Solution minSolution = allSol[0];
+    if (strategy == SearchStrategy::BruteForce) {
+        DefectSAT defectSAT(original_graph, modifiedGraphEdgeList, baseline);  // fresh solver each k
+        vector<Solution> allSol = defectSAT.getAllSolutions();
 
-    for (Solution solution: allSol) {
-        int hammingDistance = hammingDistanceForDefect(original_solution,solution);
-        if (hammingDistance < minHammingDistance) {
-            minHammingDistance = hammingDistance;
-            minSolution = solution;
+        int minHammingDistance = hammingDistanceForDefect(original_solution,allSol[0]);
+        Solution minSolution = allSol[0];
+
+        for (Solution solution: allSol) {
+            int hammingDistance = hammingDistanceForDefect(original_solution,solution);
+            if (hammingDistance < minHammingDistance) {
+                minHammingDistance = hammingDistance;
+                minSolution = solution;
+            }
+        }
+        cout << "Amount of solutions: " << allSol.size() << endl;
+        cout << "Calculated min. hammign distance: " << minHammingDistance << endl;
+        exportPython(minSolution, "../export_data/sol.txt", og_edge_list.edge_list, true);
+    }
+    else if (strategy == SearchStrategy::Incremental) {
+        DefectSAT defectSAT(original_graph, modifiedGraphEdgeList, baseline);
+
+        for (int k = 0; k <= (int)og_edge_list.size(); k++) {
+            if (defectSAT.solveAtDistance(k)) {
+                Solution r = defectSAT.extractSolution();
+                cout << "Solved at Hamming distance: " << k << "\n";
+                cout << "Verified Hamming: " << hammingDistanceForDefect(original_solution, r) << "\n";
+                exportPython(r, "../export_data/sol.txt", og_edge_list.edge_list, true);
+                break;
+            }
+            cout << "No solution at distance " << k << "\n";
         }
     }
-    cout << "Amount of solutions: " << allSol.size() << endl;
-    cout << "Calculated min. hammign distance: " << minHammingDistance << endl;
-    exportPython(minSolution, "../export_data/sol.txt", og_edge_list.edge_list, true);
+    else{
+        throw runtime_error("Invalid strategy in func()");
+    }
+
 }
 
 ///// SO FAR SEEMS GOOD, JUST PROBLEM WITH THE HAMMING DISTANCE, FIRST TRY MIGHT BE BETTER
@@ -302,12 +293,11 @@ void func(string graph6format, int vertex1, int vertex2) {
 #define DEBUG_SINGLE_GRAPH 1
 
 int main() {
-
 #if DEBUG_SINGLE_GRAPH
 
     std::string s = "Q?hY@eOGG??B_??@g???T?a??@g";   // your test graph6 string
     std::cout << "Running single test graph\n";
-    func(s, 1, 5);
+    func(s, 1, 5, SearchStrategy::BruteForce);
 
 #else
 

@@ -23,6 +23,7 @@ public:
     SolveResult solve() override;
     bool variable_value(int var) override;
     std::vector<bool> getAnswer();
+    void assume(int lit) override { solver->assume(lit); }
 private:
     std::unique_ptr<CaDiCaL::Solver> solver;
     int max_lit = 0;

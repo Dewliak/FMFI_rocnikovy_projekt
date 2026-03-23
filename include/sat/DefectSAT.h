@@ -24,6 +24,10 @@ public:
     DefectSAT& operator=(const DefectSAT&) = delete;
 
     bool solveAtDistance(int k);
+    // new — reuses solver across calls via assumptions
+    bool solveAtDistanceIncremental(int k);
+
+
     Solution extractSolution();
 
     void encodeConstraints();
@@ -38,11 +42,21 @@ private:
     int numEdges;
     bool satisfied = false;;
     const IGraph& graph;
+
+    int nextFreeVar;                  // tracks next unused SAT variable id
+    std::vector<int> changedVarsList;
+    int buildAtMostKGated(const std::vector<int>& vars, int k, int firstAux);
+    int defectCounterEnd = 0;
+
+
     int var(int edge, int color);
+
 
     int uncovVar(int i);
 
-    int changedVar(int i);
+    int changedVar(int i, int m);
+
+    int auxBase();
 
     void encodeMatchingConstraints();
 

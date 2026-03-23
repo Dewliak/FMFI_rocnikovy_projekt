@@ -21,6 +21,7 @@ class ISAT {
     virtual SolveResult solve()=0;
     virtual bool variable_value(int var)=0;
     virtual std::vector<bool> getAnswer()=0;
+    virtual void assume(int lit) = 0;
     private:
 };
 

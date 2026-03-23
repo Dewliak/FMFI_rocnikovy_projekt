@@ -27,5 +27,5 @@ void repairMatching(
     int targetColor);
 
 vector<Solution> extendMatchings(const AdjacencyListGraph& G, int u, int v, set<Edge> M1, set<Edge> M2, set<Edge> M3);
-
+int hammingDistanceForDefect(Solution original, Solution defect);
 #endif //ROCNIKOVY_PROJEKT_UTILITIES_H
