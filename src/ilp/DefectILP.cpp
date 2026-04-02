@@ -24,7 +24,10 @@ ILPResult DefectILP::solve() {
     Highs highs;
     highs.setOptionValue("output_flag", false); // suppress solver output
 
-
+    highs.setOptionValue("mip_rel_gap", 0.0);    // require proven optimality
+    highs.setOptionValue("mip_abs_gap", 0.0);    // no gap tolerance
+    highs.setOptionValue("primal_feasibility_tolerance", 1e-9);
+    highs.setOptionValue("mip_feasibility_tolerance", 1e-9);
 
     int N = totalCols();
 
@@ -40,6 +43,7 @@ ILPResult DefectILP::solve() {
         highs.addVar(0.0, 1.0);
 
     // c[i][m] — binary, cost 1 (these are minimized)
+
     for (int i = 0; i < numEdges; i++)
         for (int m = 0; m < 3; m++)
             highs.addVar(0.0, 1.0);
@@ -161,8 +165,10 @@ ILPResult DefectILP::solve() {
     result.hammingDistance = -1;
 
     auto status = highs.getModelStatus();
+
+    // accept kOptimal only — kObjectiveBound means gap not closed
     if (status != HighsModelStatus::kOptimal) {
-        std::cerr << "ILP: no optimal solution found\n";
+        std::cout << "ILP: status = " << (int)status << " — not proven optimal\n";
         return result;
     }
 
@@ -170,8 +176,6 @@ ILPResult DefectILP::solve() {
     double value;
     highs.getInfoValue("objective_function_value", value);
     result.hammingDistance = (int)std::round(value);
-
-    // ── extract solution ──────────────────────────────────────────────────────
 
     const std::vector<double>& sol = highs.getSolution().col_value;
 
@@ -181,6 +185,30 @@ ILPResult DefectILP::solve() {
         if (std::round(sol[bCol(i, 1)]) == 1.0) result.solution.M2.insert(e);
         if (std::round(sol[bCol(i, 2)]) == 1.0) result.solution.M3.insert(e);
         if (std::round(sol[uCol(i)])    == 1.0) result.defectEdges.insert(e);
+    }
+
+    // ── debug verification ────────────────────────────────────────────────
+    int actualDefect = result.defectEdges.size();
+    if (actualDefect != 3) {
+        std::cerr << "ILP WARNING: defect = " << actualDefect << " (expected 3)\n";
+    }
+
+    // verify matching constraints hold
+    auto edgeMapLocal = edgeList.getEdgeMap();
+    for (int m = 0; m < 3; m++) {
+        const std::set<Edge>& M = (m==0) ? result.solution.M1
+                                 : (m==1) ? result.solution.M2
+                                          : result.solution.M3;
+        for (int v : graph.getVertices()) {
+            int covCount = 0;
+            for (const Edge& e : graph.getNeighborEdges(v))
+                if (M.count(e)) covCount++;
+            if (covCount != 1) {
+                std::cerr << "ILP WARNING: vertex " << v
+                          << " covered " << covCount
+                          << " times in M" << (m+1) << "\n";
+            }
+        }
     }
 
     return result;

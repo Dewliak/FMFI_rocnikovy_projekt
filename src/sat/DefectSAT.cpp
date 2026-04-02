@@ -172,24 +172,23 @@ void DefectSAT::encodeExactlyThreeDefect() {
         uncovVars.push_back(uncovVar(i));
 
     int n = uncovVars.size();
-    int firstAux = auxBase();
-
-    // at-most-3: sequential counter
-    //defectCounterEnd = addAtMostK(uncovVars, 3, firstAux);
-
-    // at-least-3: for every pair of variables we "leave out",
-    // the remaining n-2 must contain at least one true var.
-    // if fewer than 3 were true, some n-2 subset would be all false — contradiction.
     vector<pair<int,bool>> clause;
+
     for (int i = 0; i < n; i++) {
         for (int j = i + 1; j < n; j++) {
-            // clause: OR of all uncovVars except i and j
-            for (int l = 0; l < n; l++) {
-                if (l == i || l == j) continue;
-                clause.emplace_back(uncovVars[l], true);
+            for (int k = j + 1; k < n; k++) {
+                for (int l = k + 1; l < n; l++) {
+
+                    // ¬xi ∨ ¬xj ∨ ¬xk ∨ ¬xl
+                    clause.emplace_back(uncovVars[i], false);
+                    clause.emplace_back(uncovVars[j], false);
+                    clause.emplace_back(uncovVars[k], false);
+                    clause.emplace_back(uncovVars[l], false);
+
+                    satSolver->add_clause(clause);
+                    clause.clear();
+                }
             }
-            satSolver->add_clause(clause);
-            clause.clear();
         }
     }
 }
@@ -251,8 +250,8 @@ bool DefectSAT::solveAtDistance(int k) {
             changedVars.push_back(changedVar(i, m));
     }
 
-    int firstAux = auxBase();
-    defectCounterEnd = addAtMostK(changedVars, k, defectCounterEnd);
+    //int firstAux = auxBase();
+    //defectCounterEnd = addAtMostK(changedVars, k, defectCounterEnd);
 
     satisfied = (satSolver->solve() == SolveResult::SAT);
     return satisfied;

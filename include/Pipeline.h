@@ -31,6 +31,7 @@ void printMatchings(const std::set<Edge>& M1,
                     const std::set<Edge>& M3);
 
 GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2);
+vector<GraphColoringData> generateAllColoring(string graph6format, int vertex1, int vertex2);
 
 Solution findClosestWithDefectThree(
     const string originalGraphFormat,
@@ -38,4 +39,6 @@ Solution findClosestWithDefectThree(
     const Solution& originalSolution,
     const map<int,int>& baseline,
     SearchStrategy strategy = SearchStrategy::BruteForce);
+
+
 #endif //ROCNIKOVY_PROJEKT_PIPELINE_H
