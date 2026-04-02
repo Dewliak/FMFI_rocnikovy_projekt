@@ -13,6 +13,8 @@
 
 CadicalSAT::CadicalSAT() {
     solver = std::make_unique<CaDiCaL::Solver>();
+    solver->set("factor", 0);
+    solver->set("factorcheck", 0);
 }
 
 void CadicalSAT::add_clause(std::vector<std::pair<int, bool>> literal) {

@@ -8,7 +8,8 @@
 #include "graph/Edge.h"
 enum class SearchStrategy {
     BruteForce,   // enumerate all solutions, pick min Hamming
-    Incremental   // iterative deepening with assumption-gated counter
+    Incremental,   // iterative deepening with assumption-gated counter
+    ILP
 };
 
 struct Assignment

@@ -1,3 +1,6 @@
+message(STATUS "HIGHS_DIR = '${HIGHS_DIR}'")
+message(STATUS "CADICAL_DIR = '${CADICAL_DIR}'")
+
 cmake_minimum_required(VERSION 4.0)
 project(rocnikovy_projekt)
 
@@ -7,8 +10,21 @@ set(CMAKE_CXX_STANDARD 20)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # --- CaDiCaL ---
-include_directories(${CADIC1AL_DIR}/src)
+include_directories(${CADICAL_DIR}/src)
 link_directories(${CADICAL_DIR}/build)
+
+# --- HIGHS
+add_library(highs SHARED IMPORTED
+        include/ilp/DefectILP.h
+        include/Pipeline.h
+        src/PipeLine.cpp)
+
+set_target_properties(highs PROPERTIES
+        IMPORTED_LOCATION "${HIGHS_DIR}/build/lib64/libhighs.so"
+        INTERFACE_INCLUDE_DIRECTORIES "${HIGHS_DIR}/highs;${HIGHS_DIR}/build"
+)
+
+
 add_library(graph_lib
         src/graph/AdjacencyListGraph.cpp
         src/graph/EdgeList.cpp
@@ -23,6 +39,9 @@ add_library(graph_lib
         src/defect_search/assignmentGeneration.cpp
         include/export/exportPython.h
         src/export/exportPython.cpp
+        include/Pipeline.h
+        src/PipeLine.cpp
+
 )
 
 # ---------- SAT library ----------
@@ -32,10 +51,15 @@ add_library(sat_lib
         src/sat/ISAT.cpp
         src/sat/DefectSAT.cpp
         include/sat/DefectSAT.h
+        include/ilp/DefectILP.h
+        src/ilp/DefectILP.cpp
+        include/Pipeline.h
+        src/PipeLine.cpp
 )
 
+target_link_libraries(sat_lib PUBLIC highs)
 target_link_libraries(sat_lib PRIVATE cadical)
-
+target_link_libraries(graph_lib PUBLIC highs)
 # ---------- Perfect matching library ----------
 add_library(pm_lib
         src/perfect_matching/PMSAT.cpp
@@ -49,6 +73,9 @@ add_library(matrix_lib
 # ---------- Main executable ----------
 add_executable(rocnikovy_projekt
         src/main.cpp
+        include/ilp/DefectILP.h
+        include/Pipeline.h
+        src/PipeLine.cpp
 )
 
 target_link_libraries(rocnikovy_projekt
@@ -73,6 +100,8 @@ enable_testing()
 add_executable(MyTests
         tests/test_graph_coloring.cpp
         tests/test_igraph.cpp
+        tests/test_high_lpsolver.cpp
+        src/PipeLine.cpp
 )
 
 target_link_libraries(MyTests
