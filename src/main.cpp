@@ -262,6 +262,8 @@ void func(string graph6format, int vertex1, int vertex2, SearchStrategy strategy
         }
         cout << "Amount of solutions: " << allSol.size() << endl;
         cout << "Calculated min. hammign distance: " << minHammingDistance << endl;
+        cout << "Amount of edges: " << original_graph.getVertexCount() << endl;
+        printMatchings(minSolution.M1,minSolution.M2,minSolution.M3);
         exportPython(minSolution, "../export_data/sol.txt", og_edge_list.edge_list, true);
     }
     else if (strategy == SearchStrategy::Incremental) {
@@ -295,9 +297,9 @@ void func(string graph6format, int vertex1, int vertex2, SearchStrategy strategy
 int main() {
 #if DEBUG_SINGLE_GRAPH
 
-    std::string s = "Q?hY@eOGG??B_??@g???T?a??@g";   // your test graph6 string
+    std::string s = "Y?HA@_AGGOG?_G??o@?_@C??C@GO???GCB???C?WG?C?@_@_?A???S?_";   // your test graph6 string
     std::cout << "Running single test graph\n";
-    func(s, 1, 5, SearchStrategy::BruteForce);
+    func(s, 0, 14, SearchStrategy::BruteForce);
 
 #else
 

@@ -17,12 +17,16 @@ DefectSAT::DefectSAT(const IGraph& g, const EdgeList& modifiedEdgeList, std::map
     encodeUncoveredVariables();
     encodeExactlyThreeDefect();
 
+
     // part of the incremental search
+    /*
     encodeChangedVariables(); // only needed if you're using Hamming distance
     for (int i = 0; i < numEdges; i++)
         if (colorBaseline.count(i))
             for (int m = 0; m < 3; m++)
                 changedVarsList.push_back(changedVar(i, m));
+                */
+
 }
 
 
@@ -163,34 +167,31 @@ void DefectSAT::encodeUncoveredVariables() {
 // ── exactly three defect edges ───────────────────────────────────────────────
 
 void DefectSAT::encodeExactlyThreeDefect() {
-    // collect all uncov variables
     vector<int> uncovVars;
     for (int i = 0; i < numEdges; i++)
         uncovVars.push_back(uncovVar(i));
 
-    // first aux var starts after all named vars
-    int firstAux = auxBase(); // TODO: THIS WORKS in BRUTEFORCE //numEdges * 5 + 1;
-    defectCounterEnd = addAtMostK(uncovVars, 3, firstAux); // store where it ends
-    // at-most-3: sequential counter
-    int nextAux = addAtMostK(uncovVars, 3, firstAux);
-
-    // at-least-3: at-most-(n-3) of the negations
-    // equivalently: add a unit clause that the 3rd counter register is true
-    // simplest: just add at-most-3 + force sum >= 3 via a dedicated counter
-    // The cleanest way: build a second counter for at-least-3.
-    // We encode: NOT (at-most-2), i.e., the counter's slot 3 must be set.
-    // Since addAtMostK already enforces ≤3, we add one more clause:
-    // the sequential counter's s[n][3] variable must be true.
-    // We track that variable here:
     int n = uncovVars.size();
-    // s[n][3] is the variable that says "at least 3 of uncovVars are true"
-    // In our addAtMostK layout: s[i][j] = firstAux + (i-1)*(k+1) + (j-1)
-    // where k=3, so s[n][3] = firstAux + (n-1)*4 + 2
-    int atLeastThreeVar = firstAux + (n - 1) * 4 + 2;
+    int firstAux = auxBase();
 
+    // at-most-3: sequential counter
+    //defectCounterEnd = addAtMostK(uncovVars, 3, firstAux);
+
+    // at-least-3: for every pair of variables we "leave out",
+    // the remaining n-2 must contain at least one true var.
+    // if fewer than 3 were true, some n-2 subset would be all false — contradiction.
     vector<pair<int,bool>> clause;
-    clause.emplace_back(atLeastThreeVar, true);
-    satSolver->add_clause(clause);
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            // clause: OR of all uncovVars except i and j
+            for (int l = 0; l < n; l++) {
+                if (l == i || l == j) continue;
+                clause.emplace_back(uncovVars[l], true);
+            }
+            satSolver->add_clause(clause);
+            clause.clear();
+        }
+    }
 }
 
 // ── changed variables ────────────────────────────────────────────────────────
