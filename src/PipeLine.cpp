@@ -121,6 +121,8 @@ GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2
             edge_list_color.push_back(std::make_pair(edge_list.at(index), i));
             index++;
         }
+
+
     }
     else {
         std::cerr<< "SAT failed" << std::endl;

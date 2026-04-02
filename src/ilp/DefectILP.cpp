@@ -24,6 +24,8 @@ ILPResult DefectILP::solve() {
     Highs highs;
     highs.setOptionValue("output_flag", false); // suppress solver output
 
+
+
     int N = totalCols();
 
     // ── add all variables ────────────────────────────────────────────────────

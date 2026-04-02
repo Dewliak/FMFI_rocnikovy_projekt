@@ -102,6 +102,8 @@ add_executable(MyTests
         tests/test_igraph.cpp
         tests/test_high_lpsolver.cpp
         src/PipeLine.cpp
+        tests/test_compare_method_bf_ilp.cpp
+        tests/test_compare_method_bf_ilp.h
 )
 
 target_link_libraries(MyTests
