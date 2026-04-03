@@ -69,7 +69,6 @@ bool Matrix::inBounds(int i, int j) const {
 }
 
 bool Matrix::same_size(const Matrix &other) const {
-    cout << row_count << " - " << other.get_row_count() << " || " << col_count << " - " << other.col_count << endl;
     return (row_count == other.get_row_count() && col_count == other.get_col_count());
 }
 

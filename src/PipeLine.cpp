@@ -11,6 +11,7 @@
 #include "ilp/DefectILP.h"
 #include "sat/ColoringSAT.h"
 #include "sat/DefectSAT.h"
+#include "logger.h"
 
 
 vector<Solution> solutions;
@@ -108,7 +109,7 @@ GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2
     vector<Edge> edge_list = G.getEdgeList().getEdgeList();
 
     myColoringSAT.encodeConstraints();
-    std::cerr << "SAT constructed" << std::endl;
+    //std::cerr << "SAT constructed" << std::endl;
 
     vector<pair<Edge, int> > edge_list_color = {};
     if (myColoringSAT.solve()) {
@@ -144,8 +145,7 @@ GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2
         }
     }
 
-
-    cout << M1.size() << " " << M2.size() << " " << M3.size() << endl;
+    //cout << M1.size() << " " << M2.size() << " " << M3.size() << endl;
 
 
     /**
@@ -159,9 +159,6 @@ GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2
     originalSolution.M1 = M1;
     originalSolution.M2 = M2;
     originalSolution.M3 = M3;
-
-    //exportPython(originalSolution, "../export_data/original_sol.txt", originalGraphEdgeList.edge_list, true);
-
 
     EdgeList modifiedGraphEdgeList = G.getEdgeList();
 
@@ -261,7 +258,7 @@ vector<GraphColoringData> generateAllColoring(string graph6format, int vertex1, 
     vector<Edge> edge_list = G.getEdgeList().getEdgeList();
 
     myColoringSAT.encodeConstraints();
-    std::cerr << "SAT constructed" << std::endl;
+    //std::cerr << "SAT constructed" << std::endl;
 
     vector<pair<Edge, int> > edge_list_color = {};
 
@@ -298,7 +295,7 @@ vector<GraphColoringData> generateAllColoring(string graph6format, int vertex1, 
         }
 
 
-        cout << M1.size() << " " << M2.size() << " " << M3.size() << endl;
+        //cout << M1.size() << " " << M2.size() << " " << M3.size() << endl;
 
 
         /**
@@ -367,10 +364,9 @@ Solution findClosestWithDefectThree(
                 minSolution = solution;
             }
         }
-        cout << "Amount of solutions: " << allSol.size() << endl;
-        cout << "Calculated min. hammign distance: " << minHammingDistance << endl;
-        cout << "Amount of edges: " << originalGraph.getVertexCount() << endl;
-        printMatchings(minSolution.M1, minSolution.M2, minSolution.M3);
+        LOG_DEBUG("[BRUTEFORCE] Amount of solutions: {} | Calculated min. hammign distance: {} | Amount of edges: {}", allSol.size(), minHammingDistance, originalGraph.getVertexCount());
+
+        //printMatchings(minSolution.M1, minSolution.M2, minSolution.M3);
         return minSolution;
         //exportPython(minSolution, "../export_data/sol.txt", og_edge_list.edge_list, true);
     } else if (strategy == SearchStrategy::Incremental) {
@@ -394,13 +390,8 @@ Solution findClosestWithDefectThree(
         ILPResult r = ilp.solve();
 
         if (r.found) {
-            cout << "ILP Hamming distance: " << r.hammingDistance << "\n";
-            cout << "Verified:             "
-                    << hammingDistanceForDefect(originalSolution, r.solution) << "\n";
-
+            LOG_DEBUG("[ILP] ILP Hamming distance: {} | Verified: {}", r.hammingDistance, hammingDistanceForDefect(originalSolution, r.solution) );
             return r.solution;
-            //exportPython(r.solution, "../export_data/sol.txt",
-            // og_edge_list.edge_list, true);
         }
     } else {
         throw runtime_error("Invalid strategy in func()");

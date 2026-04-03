@@ -184,15 +184,15 @@ vector<Solution> extendMatchings(const AdjacencyListGraph &G, int u, int v, set<
         repairMatching(G, M1copy, M2copy, M3copy, 1);
         repairMatching(G, M1copy, M2copy, M3copy, 2);
 
+        Solution solution;
+        solution.M1 = M1copy;
+        solution.M2 = M2copy;
+        solution.M3 = M3copy;
 
-        // calc defect
-        int defect = computeDefect(G, M1copy, M2copy, M3copy);
 
-        if (defect == 3) {
-            Solution solution;
-            solution.M1 = M1copy;
-            solution.M2 = M2copy;
-            solution.M3 = M3copy;
+
+        if (computeDefect(G, solution) == 3) {
+
             solutions.push_back(solution);
 
             std::cout << "Found solution\n";

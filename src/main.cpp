@@ -4,16 +4,18 @@
 #include <bitset>
 #include <filesystem>
 #include <fstream>
-#include <ranges>
+#include <sys/syslog.h>
 
 
 #include "graph/GraphAlgorithms.h"
 #include "defect_search/structures.h"
 #include "export/exportPython.h"
-#include "sat/DefectSAT.h"
+
 
 #include "Pipeline.h"
 #include "defect_search/utilities.h"
+
+#include "logger.h"
 
 using namespace std;
 
@@ -66,16 +68,12 @@ void exportData(
 
         if (coloringData.originalSolution.M1.contains(edge)) {
             originalColoring += "1";
-            cout << " 1 ";
         } else if (coloringData.originalSolution.M2.contains(edge)) {
             originalColoring += "2";
-            cout << " 2 ";
         } else if (coloringData.originalSolution.M3.contains(edge)) {
             originalColoring += "3";
-            cout << " 3 ";
         } else {
             originalColoring += "0";
-            cout << " 4 ";
         }
 
         //cout << (defectSolution.M1.contains(edge) ? "1" : "0") << " - ";
@@ -100,9 +98,94 @@ void exportData(
 #define ALL_COLORS 1
 #define ALL_PAIRS 1
 
+#define SNARK_DEFECT 3
+#define FAULTY_SEARCH_OUTPUT_FILENAME "../export_Data/faulty_search.csv"
+
+SearchStrategy strategy = SearchStrategy::ILP;
+bool ALL_PAIR = true;
+bool ALL_COLOR = true;
+string OUTPUT_FILENAME = "../export_data/export.csv";
+string INPUT_FORMAT = "Q?gY@eOGGC?B_??@g_??DO?O?GW";
 int main() {
+
+    logger::init();
+
     std::ofstream outFile;
-    outFile.open("../export_data/export.csv", std::ios::app);
+    outFile.open(OUTPUT_FILENAME, std::ios::app);
+
+    if (INPUT_FORMAT.empty()) {
+        throw "Invalid G6 format!";
+    }
+
+
+    LOG_INFO("WORKING ON GRAPH: {}", INPUT_FORMAT);
+
+    AdjacencyListGraph graph(INPUT_FORMAT);
+
+    vector<int> vertices = graph.getVertices();
+
+    int allEdgeCount = graph.getEdgeCount();
+    int vertexCounter = 1;
+    int colorCounter = 1;
+
+    for (int i = 0; i < vertices.size(); i++) {
+        for (int j = i + 1; j < vertices.size(); j++) {
+
+            int vertex1 = vertices.at(i);
+            int vertex2 = vertices.at(j);
+
+            if (!graph.containsEdge(Edge(vertex1, vertex2))) {
+                continue;
+            }
+
+            std::vector<GraphColoringData> allData;
+
+            LOG_INFO("Working on pair {} - {}", vertex1, vertex2);
+
+            if (ALL_COLOR){
+                allData = generateAllColoring(INPUT_FORMAT, vertex1, vertex2);
+            }
+            else {
+                allData = {generateColoring(INPUT_FORMAT, vertex1, vertex2)};
+            }
+
+            colorCounter = 1;
+            for (const GraphColoringData &data: allData) {
+
+                LOG_INFO("    Vertex[{}/{}] --- Color[{}/{}]", vertexCounter, allEdgeCount, colorCounter, allData.size());
+                colorCounter++;
+
+                Solution solution = findClosestWithDefectThree(
+                    data.originalGraphFormat, data.modifiedGraphEdgeList, data.originalSolution, data.baseline,
+                    strategy);
+
+
+                if (computeDefect(graph,solution) == SNARK_DEFECT) {
+                    exportData(data, solution, strategy, outFile);
+                }
+                else {
+                    LOG_ERROR("    Error in (Vertex[{}/{}] --- Color[{}/{}]) - solution did not have defect 3", vertexCounter, allEdgeCount, colorCounter, allData.size());
+
+                    std::ofstream errorOut;
+                    errorOut.open(FAULTY_SEARCH_OUTPUT_FILENAME, std::ios::app);
+                    exportData(data, solution, strategy, errorOut);
+                    errorOut.close();
+                }
+            }
+
+            if (!ALL_PAIR) {
+                i = vertices.size() + 1;
+                break;
+            }
+            vertexCounter++;
+        }
+    }
+
+
+    outFile.close();
+    return 0;
+
+
 #if DEBUG_SINGLE_GRAPH
 
 
@@ -184,7 +267,7 @@ int main() {
 #if ALL_COLORS
                     std::vector<GraphColoringData> allData = generateAllColoring(s, v1, v2);
 #else
-                    std::vector<GraphColoringData> = allData = {generateColoring(s, v1, v2)};
+                    std::vector<GraphColoringData> allData = {generateColoring(s, v1, v2)};
 #endif
 
                     color_counter = 1;

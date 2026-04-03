@@ -6,6 +6,20 @@ project(rocnikovy_projekt)
 
 set(CMAKE_CXX_STANDARD 20)
 
+# --- logger
+
+include(FetchContent)
+
+FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.13.0
+)
+
+FetchContent_MakeAvailable(spdlog)
+
+
+
 # --- include my libraries ---
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
@@ -39,8 +53,8 @@ add_library(graph_lib
         src/defect_search/assignmentGeneration.cpp
         include/export/exportPython.h
         src/export/exportPython.cpp
-        include/Pipeline.h
-        src/PipeLine.cpp
+        include/logger.h
+        src/logger.cpp
 
 )
 
@@ -55,11 +69,15 @@ add_library(sat_lib
         src/ilp/DefectILP.cpp
         include/Pipeline.h
         src/PipeLine.cpp
+        include/logger.h
+        src/logger.cpp
 )
 
 target_link_libraries(sat_lib PUBLIC highs)
 target_link_libraries(sat_lib PRIVATE cadical)
 target_link_libraries(graph_lib PUBLIC highs)
+
+
 # ---------- Perfect matching library ----------
 add_library(pm_lib
         src/perfect_matching/PMSAT.cpp
@@ -76,6 +94,8 @@ add_executable(rocnikovy_projekt
         include/ilp/DefectILP.h
         include/Pipeline.h
         src/PipeLine.cpp
+        include/logger.h
+        src/logger.cpp
 )
 
 target_link_libraries(rocnikovy_projekt
@@ -85,7 +105,12 @@ target_link_libraries(rocnikovy_projekt
         pm_lib
         matrix_lib
         cadical
+        spdlog::spdlog
 )
+
+target_link_libraries(graph_lib PUBLIC spdlog::spdlog)
+target_link_libraries(sat_lib PUBLIC spdlog::spdlog)
+target_link_libraries(pm_lib PUBLIC spdlog::spdlog)
 
 # ------------ GoogleTest ------------
 include(FetchContent)
@@ -103,7 +128,6 @@ add_executable(MyTests
         tests/test_high_lpsolver.cpp
         src/PipeLine.cpp
         tests/test_compare_method_bf_ilp.cpp
-        tests/test_compare_method_bf_ilp.h
 )
 
 target_link_libraries(MyTests
