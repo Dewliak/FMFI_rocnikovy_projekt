@@ -185,7 +185,13 @@ GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2
     }
 
 
-    GraphColoringData data(graph6format,baseline,modifiedGraphEdgeList, originalSolution, originalGraphEdgeList);
+    GraphColoringData data(
+        graph6format,
+        baseline,modifiedGraphEdgeList,
+        originalSolution,
+        originalGraphEdgeList,
+        ((vertex1 < vertex2) ? vertex1 : vertex2),
+        ((vertex1 > vertex2) ? vertex1 : vertex2));
 
     return data;
 
@@ -334,7 +340,13 @@ vector<GraphColoringData> generateAllColoring(string graph6format, int vertex1, 
             // edges fro mthe edges might've been in the middle
         }
 
-        allData.emplace_back(graph6format,baseline,modifiedGraphEdgeList, originalSolution, originalGraphEdgeList);
+        allData.emplace_back(graph6format,
+            baseline,
+            modifiedGraphEdgeList,
+            originalSolution,
+            originalGraphEdgeList,
+            ((vertex1 < vertex2) ? vertex1 : vertex2),
+            ((vertex1 > vertex2) ? vertex1 : vertex2));
     }
 
 

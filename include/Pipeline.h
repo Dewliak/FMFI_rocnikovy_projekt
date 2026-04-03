@@ -15,14 +15,18 @@ struct GraphColoringData {
     Solution originalSolution;
     map<int,int> baseline;
     EdgeList originalGraphEdgeList;
+    int vertex1; // the first and second vertices that got deleted
+    int vertex2;
 
 
-    GraphColoringData(string graphFormat, std::map<int,int>b, EdgeList mEdgeList, Solution solution, EdgeList oEdgeList){
+    GraphColoringData(string graphFormat, std::map<int,int>b, EdgeList mEdgeList, Solution solution, EdgeList oEdgeList, int v1, int v2){
         baseline = b;
         originalGraphFormat = graphFormat;
         modifiedGraphEdgeList = mEdgeList;
         originalSolution = solution;
         originalGraphEdgeList = oEdgeList;
+        vertex1 = v1;
+        vertex2 = v2;
     }
 };
 

@@ -25,6 +25,20 @@ int ColoringSAT::var(int edge, int color) {
     return edge * numColors + color + 1;
 }
 
+vector<int> canonicalize(const vector<int>& sol) {
+    unordered_map<int,int> mapping;
+    int next = 0;
+
+    vector<int> result;
+    for (int c : sol) {
+        if (!mapping.contains(c)) {
+            mapping[c] = next++;
+        }
+        result.push_back(mapping[c]);
+    }
+    return result;
+}
+
 void ColoringSAT::encodeConstraints() {
     //node_atleast_one_color();
     //no_multiple_colors_of_node();
@@ -75,8 +89,6 @@ void ColoringSAT::encodeConstraints() {
             }
         }
     }
-
-
 }
 
 bool ColoringSAT::solve() {
@@ -99,7 +111,13 @@ std::vector<std::vector<int>> ColoringSAT::getAllColoring() {
     while (ColoringSAT::solve()) {
         vector<int> solution = getColoring();
 
-        all_answers.push_back(solution);
+        vector<int> canon = canonicalize(solution); // TODO: test this deeply
+
+
+        if (solution == canon) {
+            all_answers.push_back(solution);
+        }
+
 
         for (int i =0; i < solution.size(); i++) {
             clause.emplace_back(var(i,solution[i]),false);

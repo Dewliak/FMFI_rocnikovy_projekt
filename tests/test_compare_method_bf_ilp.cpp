@@ -174,7 +174,7 @@ TEST(MethodTesting, ALLPAIRS_ALLCOLORS_BF_ILP2) {
                 continue;
             }
             cout << "Vertex pair: " << v1 << " " << v2 << endl;
-            std::vector<GraphColoringData> allData = generateAllColoring(s, 0, 4);
+            std::vector<GraphColoringData> allData = generateAllColoring(s, v1, v2);
 
 
             for (GraphColoringData data: allData) {

@@ -21,6 +21,7 @@ public:
     void encodeConstraints();
     bool solve();
     std::vector<int> getColoring();
+    void breakColorSymmetry();
     // solution mapping vertex -> color
     std::vector<std::vector<int>> getAllColoring();
 private:
