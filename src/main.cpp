@@ -101,14 +101,59 @@ void exportData(
 #define SNARK_DEFECT 3
 #define FAULTY_SEARCH_OUTPUT_FILENAME "../export_Data/faulty_search.csv"
 
-SearchStrategy strategy = SearchStrategy::ILP;
+SearchStrategy STRATEGY = SearchStrategy::ILP;
 bool ALL_PAIR = true;
 bool ALL_COLOR = true;
 string OUTPUT_FILENAME = "../export_data/export.csv";
-string INPUT_FORMAT = "Q?gY@eOGGC?B_??@g_??DO?O?GW";
-int main() {
+string INPUT_FORMAT;
+int main(int argc, char* argv[]) {
 
     logger::init();
+
+
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+
+        if (arg == "--ilp") {
+            STRATEGY = SearchStrategy::ILP;
+        }
+        else if (arg == "--bruteforce") {
+            STRATEGY = SearchStrategy::BruteForce;
+        }
+        else if (arg == "-f") {
+            if (i + 1 < argc) {
+                OUTPUT_FILENAME = argv[++i]; // consume next arg
+            } else {
+                std::cerr << "-f requires filename\n";
+                return 1;
+            }
+        }
+        else if (arg == "-g") {
+            if (i + 1 < argc) {
+                INPUT_FORMAT = argv[++i]; // consume next arg
+            } else {
+                std::cerr << "-g requires graph6 format\n";
+                return 1;
+            }
+        }
+        else if (arg == "--one_color") {
+            ALL_COLOR = false;
+        }
+        else if (arg == "--all_colors") {
+            ALL_COLOR = true;
+        }
+        else if (arg == "--one_pair") {
+            ALL_PAIR = false;
+        }
+        else if (arg == "--all_pairs") {
+            ALL_PAIR = true;
+        }
+        else {
+            std::cerr << "Unknown argument: " << arg << "\n";
+            return 1;
+        }
+    }
+
 
     std::ofstream outFile;
     outFile.open(OUTPUT_FILENAME, std::ios::app);
@@ -157,18 +202,18 @@ int main() {
 
                 Solution solution = findClosestWithDefectThree(
                     data.originalGraphFormat, data.modifiedGraphEdgeList, data.originalSolution, data.baseline,
-                    strategy);
+                    STRATEGY);
 
 
                 if (computeDefect(graph,solution) == SNARK_DEFECT) {
-                    exportData(data, solution, strategy, outFile);
+                    exportData(data, solution, STRATEGY, outFile);
                 }
                 else {
                     LOG_ERROR("    Error in (Vertex[{}/{}] --- Color[{}/{}]) - solution did not have defect 3", vertexCounter, allEdgeCount, colorCounter, allData.size());
 
                     std::ofstream errorOut;
                     errorOut.open(FAULTY_SEARCH_OUTPUT_FILENAME, std::ios::app);
-                    exportData(data, solution, strategy, errorOut);
+                    exportData(data, solution, STRATEGY, errorOut);
                     errorOut.close();
                 }
             }
@@ -181,7 +226,7 @@ int main() {
         }
     }
 
-
+    cout << "Finished working on graph : " << INPUT_FORMAT << endl;
     outFile.close();
     return 0;
 
