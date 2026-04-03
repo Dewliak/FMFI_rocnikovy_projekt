@@ -6,19 +6,20 @@
 #define ROCNIKOVY_PROJEKT_STRUCTURES_H
 
 #include "graph/Edge.h"
+
 enum class SearchStrategy {
-    BruteForce,   // enumerate all solutions, pick min Hamming
-    Incremental,   // iterative deepening with assumption-gated counter
+    BruteForce, // enumerate all solutions, pick min Hamming
+    Incremental, // iterative deepening with assumption-gated counter
     ILP
 };
 
-struct Assignment
-{
-    Edge uEdge[3];  // edge at u for M1,M2,M3
-    Edge vEdge[3];  // edge at v for M1,M2,M3
+struct Assignment {
+    Edge uEdge[3]; // edge at u for M1,M2,M3
+    Edge vEdge[3]; // edge at v for M1,M2,M3
 };
 
-struct Solution { // to store a solution for later calculations - distance from the original
+struct Solution {
+    // to store a solution for later calculations - distance from the original
     std::set<Edge> M1;
     std::set<Edge> M2;
     std::set<Edge> M3;

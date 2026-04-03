@@ -14,10 +14,9 @@
 #include <ranges>
 
 
-ColoringSAT::ColoringSAT(const IGraph& g, int color_count): graph(g), numColors(color_count) {
+ColoringSAT::ColoringSAT(const IGraph &g, int color_count) : graph(g), numColors(color_count) {
     satSolver = std::make_unique<CadicalSAT>();
     encodeConstraints();
-
 }
 
 int ColoringSAT::var(int edge, int color) {
@@ -25,12 +24,12 @@ int ColoringSAT::var(int edge, int color) {
     return edge * numColors + color + 1;
 }
 
-vector<int> canonicalize(const vector<int>& sol) {
-    unordered_map<int,int> mapping;
+vector<int> canonicalize(const vector<int> &sol) {
+    unordered_map<int, int> mapping;
     int next = 0;
 
     vector<int> result;
-    for (int c : sol) {
+    for (int c: sol) {
         if (!mapping.contains(c)) {
             mapping[c] = next++;
         }
@@ -46,15 +45,13 @@ void ColoringSAT::encodeConstraints() {
 
     // every edge has atleast one color, and not more than one color
     EdgeList edge_list = graph.getEdgeList();
-    vector<Edge> edges =  edge_list.getEdgeList();
-    map<Edge,int> edge_map = edge_list.getEdgeMap();
-    vector<pair<int,bool>> clause = vector<pair<int,bool>>();
-    for (int i =0; i <edges.size(); i++) {
-
-
+    vector<Edge> edges = edge_list.getEdgeList();
+    map<Edge, int> edge_map = edge_list.getEdgeMap();
+    vector<pair<int, bool> > clause = vector<pair<int, bool> >();
+    for (int i = 0; i < edges.size(); i++) {
         //atleast one color
         for (int k = 0; k < numColors; k++) {
-            clause.emplace_back(var(i,k),true);
+            clause.emplace_back(var(i, k), true);
         }
         satSolver->add_clause(clause);
         clause.clear();
@@ -62,8 +59,8 @@ void ColoringSAT::encodeConstraints() {
         // not more than one color
         for (int k1 = 0; k1 < numColors; k1++) {
             for (int k2 = k1 + 1; k2 < numColors; k2++) {
-                clause.emplace_back(var(i,k1),false);
-                clause.emplace_back(var(i,k2),false);
+                clause.emplace_back(var(i, k1), false);
+                clause.emplace_back(var(i, k2), false);
 
                 satSolver->add_clause(clause);
                 clause.clear();
@@ -80,9 +77,9 @@ void ColoringSAT::encodeConstraints() {
                     continue;
                 }
 
-                for (int k =0; k < numColors; k++) {
-                    clause.emplace_back(var(edge_map[e1],k),false);
-                    clause.emplace_back(var(edge_map[e2],k),false);
+                for (int k = 0; k < numColors; k++) {
+                    clause.emplace_back(var(edge_map[e1], k), false);
+                    clause.emplace_back(var(edge_map[e2], k), false);
                     satSolver->add_clause(clause);
                     clause.clear();
                 }
@@ -92,7 +89,6 @@ void ColoringSAT::encodeConstraints() {
 }
 
 bool ColoringSAT::solve() {
-
     SolveResult result = satSolver->solve();
 
     if (result == SolveResult::SAT) {
@@ -100,14 +96,13 @@ bool ColoringSAT::solve() {
         return true;
     }
     return false;
-
 }
 
-std::vector<std::vector<int>> ColoringSAT::getAllColoring() {
-    vector<vector<int>> all_answers = {};
+std::vector<std::vector<int> > ColoringSAT::getAllColoring() {
+    vector<vector<int> > all_answers = {};
 
     vector<Edge> edges = graph.getEdgeList().getEdgeList();
-    vector<pair<int,bool>> clause = vector<pair<int,bool>>();
+    vector<pair<int, bool> > clause = vector<pair<int, bool> >();
     while (ColoringSAT::solve()) {
         vector<int> solution = getColoring();
 
@@ -119,8 +114,8 @@ std::vector<std::vector<int>> ColoringSAT::getAllColoring() {
         }
 
 
-        for (int i =0; i < solution.size(); i++) {
-            clause.emplace_back(var(i,solution[i]),false);
+        for (int i = 0; i < solution.size(); i++) {
+            clause.emplace_back(var(i, solution[i]), false);
         }
 
         satSolver->add_clause(clause);
@@ -128,7 +123,6 @@ std::vector<std::vector<int>> ColoringSAT::getAllColoring() {
     }
 
     return all_answers;
-
 }
 
 std::vector<int> ColoringSAT::getColoring() {
@@ -142,7 +136,7 @@ std::vector<int> ColoringSAT::getColoring() {
     for (int i = 0; i < edge_list.size(); i++) {
         for (int k = 0; k < numColors; k++) {
             //cout << "[ " << edge_list.at(i).getFirst() << " - " <<  edge_list.at(i).getSecond() << " ] : " << " - " << k << ": " << satSolver->variable_value(var(i,k)) << endl;
-            if (satSolver->variable_value(var(i,k))) {
+            if (satSolver->variable_value(var(i, k))) {
                 colors[i] = k;
             }
         }

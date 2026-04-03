@@ -16,24 +16,23 @@
 vector<Solution> solutions;
 
 
-void printMatchings(const std::set<Edge>& M1,
-                    const std::set<Edge>& M2,
-                    const std::set<Edge>& M3)
-{
+void printMatchings(const std::set<Edge> &M1,
+                    const std::set<Edge> &M2,
+                    const std::set<Edge> &M3) {
     std::cout << "Matching M1:\n";
-    for(const Edge& e: M1) {
+    for (const Edge &e: M1) {
         std::cout << "(" << e.getFirst() << "," << e.getSecond() << ") ";
     }
     std::cout << "\n";
 
     std::cout << "Matching M2:\n";
-    for(const Edge& e: M2) {
+    for (const Edge &e: M2) {
         std::cout << "(" << e.getFirst() << "," << e.getSecond() << ") ";
     }
     std::cout << "\n";
 
     std::cout << "Matching M3:\n";
-    for(const Edge& e: M3) {
+    for (const Edge &e: M3) {
         std::cout << "(" << e.getFirst() << "," << e.getSecond() << ") ";
     }
     std::cout << "\n";
@@ -41,7 +40,7 @@ void printMatchings(const std::set<Edge>& M1,
 
 
 GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2) {
-        //int min_h_distance = 10e6;
+    //int min_h_distance = 10e6;
 
     AdjacencyListGraph original_graph(graph6format);
 
@@ -57,7 +56,7 @@ GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2
     EdgeList originalGraphEdgeList = original_graph.getEdgeList();
 
 
-    if (!original_graph.containsEdge(Edge(vertex1,vertex2))) {
+    if (!original_graph.containsEdge(Edge(vertex1, vertex2))) {
         throw runtime_error("No such edge");
     }
 
@@ -88,12 +87,10 @@ GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2
     }
 
     vector<Edge> deleted_edges = {};
-    for (Edge e: G.getNeighborEdges(vertex1)){
-
-
-         deleted_edges.push_back(e); // save edges so we can restore later
-         G.removeEdge(e);
-     }
+    for (Edge e: G.getNeighborEdges(vertex1)) {
+        deleted_edges.push_back(e); // save edges so we can restore later
+        G.removeEdge(e);
+    }
 
     for (Edge e: G.getNeighborEdges(vertex2)) {
         deleted_edges.push_back(e); // save edges so we can restore later
@@ -107,13 +104,13 @@ GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2
     */
 
     // Find coloring G' => EdgeList
-    ColoringSAT myColoringSAT(G,3);
-    vector<Edge> edge_list =  G.getEdgeList().getEdgeList();
+    ColoringSAT myColoringSAT(G, 3);
+    vector<Edge> edge_list = G.getEdgeList().getEdgeList();
 
     myColoringSAT.encodeConstraints();
     std::cerr << "SAT constructed" << std::endl;
 
-    vector<pair<Edge,int>> edge_list_color = {};
+    vector<pair<Edge, int> > edge_list_color = {};
     if (myColoringSAT.solve()) {
         //std::cerr << "SAT solved" << std::endl;
         int index = 0;
@@ -121,21 +118,18 @@ GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2
             edge_list_color.push_back(std::make_pair(edge_list.at(index), i));
             index++;
         }
-
-
-    }
-    else {
-        std::cerr<< "SAT failed" << std::endl;
+    } else {
+        std::cerr << "SAT failed" << std::endl;
         assert(false); // shouldnt fail the sat
     }
 
     set<Edge> M1 = {}, M2 = {}, M3 = {}; // create matchings sets
-    map<int,int> baseline;
+    map<int, int> baseline;
     for (int i = 0; i < edge_list_color.size(); i++) {
         baseline[i] = edge_list_color[i].second;
     }
 
-    for (pair<Edge,int> edge_pair: edge_list_color) {
+    for (pair<Edge, int> edge_pair: edge_list_color) {
         switch (edge_pair.second) {
             case 0:
                 M1.insert(edge_pair.first);
@@ -151,8 +145,7 @@ GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2
     }
 
 
-
-    cout << M1.size() <<  " " << M2.size() << " " << M3.size() << endl;
+    cout << M1.size() << " " << M2.size() << " " << M3.size() << endl;
 
 
     /**
@@ -179,7 +172,8 @@ GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2
      */
 
     for (Edge edge: deleted_edges) {
-        modifiedGraphEdgeList.addEdge(edge); // we put the deleted edges back to the edge list, this way it stil be compatible
+        modifiedGraphEdgeList.addEdge(edge);
+        // we put the deleted edges back to the edge list, this way it stil be compatible
         // but it might not be if we used the original graph and it's own edgelsit, since the deleted
         // edges fro mthe edges might've been in the middle
     }
@@ -187,19 +181,18 @@ GraphColoringData generateColoring(string graph6format, int vertex1, int vertex2
 
     GraphColoringData data(
         graph6format,
-        baseline,modifiedGraphEdgeList,
+        baseline, modifiedGraphEdgeList,
         originalSolution,
         originalGraphEdgeList,
         ((vertex1 < vertex2) ? vertex1 : vertex2),
         ((vertex1 > vertex2) ? vertex1 : vertex2));
 
     return data;
-
 }
 
 // TODO: In someway conenct it
 vector<GraphColoringData> generateAllColoring(string graph6format, int vertex1, int vertex2) {
-        //int min_h_distance = 10e6;
+    //int min_h_distance = 10e6;
     vector<GraphColoringData> allData = {};
 
     AdjacencyListGraph original_graph(graph6format);
@@ -216,7 +209,7 @@ vector<GraphColoringData> generateAllColoring(string graph6format, int vertex1, 
     EdgeList originalGraphEdgeList = original_graph.getEdgeList();
 
 
-    if (!original_graph.containsEdge(Edge(vertex1,vertex2))) {
+    if (!original_graph.containsEdge(Edge(vertex1, vertex2))) {
         throw runtime_error("No such edge");
     }
 
@@ -247,12 +240,10 @@ vector<GraphColoringData> generateAllColoring(string graph6format, int vertex1, 
     }
 
     vector<Edge> deleted_edges = {};
-    for (Edge e: G.getNeighborEdges(vertex1)){
-
-
-         deleted_edges.push_back(e); // save edges so we can restore later
-         G.removeEdge(e);
-     }
+    for (Edge e: G.getNeighborEdges(vertex1)) {
+        deleted_edges.push_back(e); // save edges so we can restore later
+        G.removeEdge(e);
+    }
 
     for (Edge e: G.getNeighborEdges(vertex2)) {
         deleted_edges.push_back(e); // save edges so we can restore later
@@ -266,15 +257,15 @@ vector<GraphColoringData> generateAllColoring(string graph6format, int vertex1, 
     */
 
     // Find coloring G' => EdgeList
-    ColoringSAT myColoringSAT(G,3);
-    vector<Edge> edge_list =  G.getEdgeList().getEdgeList();
+    ColoringSAT myColoringSAT(G, 3);
+    vector<Edge> edge_list = G.getEdgeList().getEdgeList();
 
     myColoringSAT.encodeConstraints();
     std::cerr << "SAT constructed" << std::endl;
 
-    vector<pair<Edge,int>> edge_list_color = {};
+    vector<pair<Edge, int> > edge_list_color = {};
 
-    vector<vector<int>> allColoring = myColoringSAT.getAllColoring();
+    vector<vector<int> > allColoring = myColoringSAT.getAllColoring();
 
 
     for (vector<int> coloring: allColoring) {
@@ -286,12 +277,12 @@ vector<GraphColoringData> generateAllColoring(string graph6format, int vertex1, 
             index++;
         }
         set<Edge> M1 = {}, M2 = {}, M3 = {}; // create matchings sets
-        map<int,int> baseline ={};
+        map<int, int> baseline = {};
         for (int i = 0; i < edge_list_color.size(); i++) {
             baseline[i] = edge_list_color[i].second;
         }
 
-        for (pair<Edge,int> edge_pair: edge_list_color) {
+        for (pair<Edge, int> edge_pair: edge_list_color) {
             switch (edge_pair.second) {
                 case 0:
                     M1.insert(edge_pair.first);
@@ -307,8 +298,7 @@ vector<GraphColoringData> generateAllColoring(string graph6format, int vertex1, 
         }
 
 
-
-        cout << M1.size() <<  " " << M2.size() << " " << M3.size() << endl;
+        cout << M1.size() << " " << M2.size() << " " << M3.size() << endl;
 
 
         /**
@@ -335,44 +325,43 @@ vector<GraphColoringData> generateAllColoring(string graph6format, int vertex1, 
          */
 
         for (Edge edge: deleted_edges) {
-            modifiedGraphEdgeList.addEdge(edge); // we put the deleted edges back to the edge list, this way it stil be compatible
+            modifiedGraphEdgeList.addEdge(edge);
+            // we put the deleted edges back to the edge list, this way it stil be compatible
             // but it might not be if we used the original graph and it's own edgelsit, since the deleted
             // edges fro mthe edges might've been in the middle
         }
 
         allData.emplace_back(graph6format,
-            baseline,
-            modifiedGraphEdgeList,
-            originalSolution,
-            originalGraphEdgeList,
-            ((vertex1 < vertex2) ? vertex1 : vertex2),
-            ((vertex1 > vertex2) ? vertex1 : vertex2));
+                             baseline,
+                             modifiedGraphEdgeList,
+                             originalSolution,
+                             originalGraphEdgeList,
+                             ((vertex1 < vertex2) ? vertex1 : vertex2),
+                             ((vertex1 > vertex2) ? vertex1 : vertex2));
     }
 
 
     return allData;
-
 }
 
 
 Solution findClosestWithDefectThree(
     const string originalGraphFormat,
-    const EdgeList& modifiedGraphEdgeList,
-    const Solution& originalSolution,
-    const map<int,int>& baseline,
+    const EdgeList &modifiedGraphEdgeList,
+    const Solution &originalSolution,
+    const map<int, int> &baseline,
     SearchStrategy strategy) {
-
     AdjacencyListGraph originalGraph(originalGraphFormat);
 
     if (strategy == SearchStrategy::BruteForce) {
-        DefectSAT defectSAT(originalGraph, modifiedGraphEdgeList, baseline);  // fresh solver each k
+        DefectSAT defectSAT(originalGraph, modifiedGraphEdgeList, baseline); // fresh solver each k
         vector<Solution> allSol = defectSAT.getAllSolutions();
 
-        int minHammingDistance = hammingDistanceForDefect(originalSolution,allSol[0]);
+        int minHammingDistance = hammingDistanceForDefect(originalSolution, allSol[0]);
         Solution minSolution = allSol[0];
 
-        for (const Solution& solution: allSol) {
-            int hammingDistance = hammingDistanceForDefect(originalSolution,solution);
+        for (const Solution &solution: allSol) {
+            int hammingDistance = hammingDistanceForDefect(originalSolution, solution);
             if (hammingDistance < minHammingDistance) {
                 minHammingDistance = hammingDistance;
                 minSolution = solution;
@@ -381,11 +370,10 @@ Solution findClosestWithDefectThree(
         cout << "Amount of solutions: " << allSol.size() << endl;
         cout << "Calculated min. hammign distance: " << minHammingDistance << endl;
         cout << "Amount of edges: " << originalGraph.getVertexCount() << endl;
-        printMatchings(minSolution.M1,minSolution.M2,minSolution.M3);
+        printMatchings(minSolution.M1, minSolution.M2, minSolution.M3);
         return minSolution;
         //exportPython(minSolution, "../export_data/sol.txt", og_edge_list.edge_list, true);
-    }
-    else if (strategy == SearchStrategy::Incremental) {
+    } else if (strategy == SearchStrategy::Incremental) {
         DefectSAT defectSAT(originalGraph, modifiedGraphEdgeList, baseline);
         /*
         for (int k = 0; k <= (int)og_edge_list.size(); k++) {
@@ -401,24 +389,20 @@ Solution findClosestWithDefectThree(
         }
         */
         return originalSolution; // error
-    }
-    else if (strategy == SearchStrategy::ILP) {
+    } else if (strategy == SearchStrategy::ILP) {
         DefectILP ilp(originalGraph, modifiedGraphEdgeList, baseline);
         ILPResult r = ilp.solve();
 
         if (r.found) {
             cout << "ILP Hamming distance: " << r.hammingDistance << "\n";
             cout << "Verified:             "
-                 << hammingDistanceForDefect(originalSolution, r.solution) << "\n";
+                    << hammingDistanceForDefect(originalSolution, r.solution) << "\n";
 
             return r.solution;
             //exportPython(r.solution, "../export_data/sol.txt",
-                        // og_edge_list.edge_list, true);
+            // og_edge_list.edge_list, true);
         }
-    }
-
-    else{
+    } else {
         throw runtime_error("Invalid strategy in func()");
     }
-
 }

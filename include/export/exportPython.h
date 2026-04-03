@@ -10,7 +10,7 @@
 
 #include "graph/EdgeList.h"
 
-void exportPython(Solution solution, std::string filename, vector<Edge> edge_list ={}, bool deleted_edges = false);
+void exportPython(Solution solution, std::string filename, vector<Edge> edge_list = {}, bool deleted_edges = false);
 
 
 #endif //ROCNIKOVY_PROJEKT_EXPORTPYTHON_H

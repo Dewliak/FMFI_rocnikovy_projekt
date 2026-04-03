@@ -9,20 +9,25 @@
 #include <vector>
 #include <utility>
 
-enum class SolveResult {SAT, UNSAT, UNKNOWN};
+enum class SolveResult { SAT, UNSAT, UNKNOWN };
 
 class ISAT {
-    public:
+public:
     virtual ~ISAT() = default;
 
 
-    virtual void add_clause(std::vector<std::pair<int,bool>> literal )=0;
+    virtual void add_clause(std::vector<std::pair<int, bool> > literal) =0;
+
     //virtual add(unsigned var, boolean value);
-    virtual SolveResult solve()=0;
-    virtual bool variable_value(int var)=0;
-    virtual std::vector<bool> getAnswer()=0;
+    virtual SolveResult solve() =0;
+
+    virtual bool variable_value(int var) =0;
+
+    virtual std::vector<bool> getAnswer() =0;
+
     virtual void assume(int lit) = 0;
-    private:
+
+private:
 };
 
 #endif //ROCNIKOVY_PROJEKT_SATINTERFACE_H

@@ -14,30 +14,32 @@
 
 
 template<typename T>
-std::set<std::set<T>> all_subsets_size_k(std::vector<T> array, int k);
+std::set<std::set<T> > all_subsets_size_k(std::vector<T> array, int k);
 
 class PMSAT {
-    public:
-    PMSAT(const IGraph &g, int color_count=3);
-    PMSAT(const PMSAT&) = delete;
-    PMSAT& operator=(const PMSAT&) = delete;
+public:
+    PMSAT(const IGraph &g, int color_count = 3);
+
+    PMSAT(const PMSAT &) = delete;
+
+    PMSAT &operator=(const PMSAT &) = delete;
 
     void setSAT(std::unique_ptr<ISAT> sat);
+
     void encodeConstraints();
+
     bool solve();
+
     std::vector<int> getSets() const; // solution mapping vertex -> color
     bool isSatisfied() const;
 
-
 private:
-
     EdgeList edge_list_;
 
-    const IGraph& graph;
+    const IGraph &graph;
     bool satisfied = false;
     const int numColors;
     std::unique_ptr<ISAT> satSolver = nullptr;
-
 };
 
 

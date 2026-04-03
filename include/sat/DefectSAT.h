@@ -11,19 +11,22 @@
 #include "graph/IGraph.h"
 
 struct ExtractionResult {
-    Solution solution;           // M1, M2, M3
-    std::set<Edge> defectEdges;  // the 3 uncovered edges
-    int hammingDistance;         // how many G' edges changed color vs baseline
-    std::vector<std::pair<Edge,int>> changedEdges; // which ones changed, and to what
+    Solution solution; // M1, M2, M3
+    std::set<Edge> defectEdges; // the 3 uncovered edges
+    int hammingDistance; // how many G' edges changed color vs baseline
+    std::vector<std::pair<Edge, int> > changedEdges; // which ones changed, and to what
 };
 
 class DefectSAT {
 public:
-    DefectSAT(const IGraph& g, const EdgeList& edgeList, std::map<int,int> baseline, int colorCount=3);
-    DefectSAT(const DefectSAT&) = delete;
-    DefectSAT& operator=(const DefectSAT&) = delete;
+    DefectSAT(const IGraph &g, const EdgeList &edgeList, std::map<int, int> baseline, int colorCount = 3);
+
+    DefectSAT(const DefectSAT &) = delete;
+
+    DefectSAT &operator=(const DefectSAT &) = delete;
 
     bool solveAtDistance(int k);
+
     // new — reuses solver across calls via assumptions
     bool solveAtDistanceIncremental(int k);
 
@@ -31,21 +34,28 @@ public:
     Solution extractSolution();
 
     void encodeConstraints();
+
     ExtractionResult extractSolution2();
+
     bool solve();
+
     std::vector<int> getSolution();
+
     std::vector<Solution> getAllSolutions();
+
 private:
     EdgeList edgeList;
-    map<int,int> colorBaseline;
-    int  numColors;
+    map<int, int> colorBaseline;
+    int numColors;
     int numEdges;
     bool satisfied = false;;
-    const IGraph& graph;
+    const IGraph &graph;
 
-    int nextFreeVar;                  // tracks next unused SAT variable id
+    int nextFreeVar; // tracks next unused SAT variable id
     std::vector<int> changedVarsList;
-    int buildAtMostKGated(const std::vector<int>& vars, int k, int firstAux);
+
+    int buildAtMostKGated(const std::vector<int> &vars, int k, int firstAux);
+
     int defectCounterEnd = 0;
 
 
@@ -68,7 +78,7 @@ private:
 
     int addAtMostK(const vector<int> &vars, int k, int firstAuxVar);
 
-    void addBlockingClause(const Solution& sol);
+    void addBlockingClause(const Solution &sol);
 
     unique_ptr<ISAT> satSolver;
 };

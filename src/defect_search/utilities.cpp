@@ -7,18 +7,18 @@
 #include <iostream>
 #include <stack>
 
-int getEdgeColor(const Edge& e, const std::set<Edge>& M1, const std::set<Edge>& M2, const std::set<Edge>& M3) {
+int getEdgeColor(const Edge &e, const std::set<Edge> &M1, const std::set<Edge> &M2, const std::set<Edge> &M3) {
     if (M1.contains(e)) return 0;
     if (M2.contains(e)) return 1;
     if (M3.contains(e)) return 2;
     return -1;
 }
 
-int getMissingVertexColor(const int vertex, const AdjacencyListGraph& G, const std::set<Edge>& M1, const std::set<Edge>& M2, const std::set<Edge>& M3) {
-
+int getMissingVertexColor(const int vertex, const AdjacencyListGraph &G, const std::set<Edge> &M1,
+                          const std::set<Edge> &M2, const std::set<Edge> &M3) {
     // G should be the G - {u,v} so these vertexes have only 2 adjecent edges
     int answer = 0 + 1 + 2;
-    for (Edge e : G.getNeighborEdges(vertex)) {
+    for (Edge e: G.getNeighborEdges(vertex)) {
         if (M1.contains(e)) answer -= 0;
         if (M2.contains(e)) answer -= 1;
         if (M3.contains(e)) answer -= 2;
@@ -29,51 +29,47 @@ int getMissingVertexColor(const int vertex, const AdjacencyListGraph& G, const s
 
 
 vector<Edge> findAlternatingPath(
-        const AdjacencyListGraph& G,
-        int start,
-        int colorA,
-        int colorB,
-        const set<Edge>& M1,
-        const set<Edge>& M2,
-        const set<Edge>& M3)
-{
-    stack<pair<int,int>> st;
-    map<int,bool> visited;
-    map<int,Edge> parentEdge;
+    const AdjacencyListGraph &G,
+    int start,
+    int colorA,
+    int colorB,
+    const set<Edge> &M1,
+    const set<Edge> &M2,
+    const set<Edge> &M3) {
+    stack<pair<int, int> > st;
+    map<int, bool> visited;
+    map<int, Edge> parentEdge;
 
     st.emplace(start, colorA);
 
     int targetVertex = -1;
 
-    while(!st.empty())
-    {
-        pair<int,int> p = st.top();
+    while (!st.empty()) {
+        pair<int, int> p = st.top();
         st.pop();
 
         int v = p.first;
         int expectedColor = p.second;
 
-        if(visited[v]) continue;
+        if (visited[v]) continue;
         visited[v] = true;
 
-        for(const Edge& e : G.getNeighborEdges(v))
-        {
+        for (const Edge &e: G.getNeighborEdges(v)) {
             int c = getEdgeColor(e, M1, M2, M3);
 
             // only follow alternating colors
-            if(c != expectedColor) continue;
+            if (c != expectedColor) continue;
 
             int u = (e.getFirst() == v) ? e.getSecond() : e.getFirst();
 
-            if(visited[u]) continue;
+            if (visited[u]) continue;
 
             parentEdge[u] = e;
 
             // check if u is exposed in the matching
             Edge incident = findEdgeAtVertex(M1, u);
 
-            if(incident.first == -1)
-            {
+            if (incident.first == -1) {
                 targetVertex = u;
                 break;
             }
@@ -82,19 +78,18 @@ vector<Edge> findAlternatingPath(
             st.emplace(u, nextColor);
         }
 
-        if(targetVertex != -1)
+        if (targetVertex != -1)
             break;
     }
 
     vector<Edge> path;
 
-    if(targetVertex == -1)
+    if (targetVertex == -1)
         return path;
 
     int current = targetVertex;
 
-    while(current != start)
-    {
+    while (current != start) {
         Edge e = parentEdge[current];
         path.push_back(e);
 
@@ -106,17 +101,15 @@ vector<Edge> findAlternatingPath(
     return path;
 }
 
-Edge findEdgeAtVertex(const std::set<Edge>& M, int v)
-{
-    for (const Edge& e : M)
+Edge findEdgeAtVertex(const std::set<Edge> &M, int v) {
+    for (const Edge &e: M)
         if (e.first == v || e.second == v)
             return e;
 
-    return Edge(-1,-1); // not found
+    return Edge(-1, -1); // not found
 }
 
-void insertEdgeIntoMatching(std::set<Edge>& M, const Edge& e)
-{
+void insertEdgeIntoMatching(std::set<Edge> &M, const Edge &e) {
     Edge e1 = findEdgeAtVertex(M, e.first);
     Edge e2 = findEdgeAtVertex(M, e.second);
 
@@ -130,35 +123,37 @@ void insertEdgeIntoMatching(std::set<Edge>& M, const Edge& e)
 }
 
 
-
 void repairMatching(
-    const AdjacencyListGraph& G,
-    set<Edge>& M1, set<Edge>& M2, set<Edge>& M3,
-    int targetColor)   // which matching to repair
+    const AdjacencyListGraph &G,
+    set<Edge> &M1, set<Edge> &M2, set<Edge> &M3,
+    int targetColor) // which matching to repair
 {
-    set<Edge>& target = (targetColor == 0) ? M1
-                      : (targetColor == 1) ? M2 : M3;
+    set<Edge> &target = (targetColor == 0)
+                            ? M1
+                            : (targetColor == 1)
+                                  ? M2
+                                  : M3;
 
     int altA = (targetColor == 0) ? 1 : 0;
     int altB = (targetColor == 0) ? 2 : (targetColor == 1) ? 2 : 1;
 
-    for (int v : G.getVertices()) {
+    for (int v: G.getVertices()) {
         if (findEdgeAtVertex(target, v).first != -1) continue;
 
         // Now findAlternatingPath gets real M1,M2,M3 — colors are correct
         vector<Edge> path = findAlternatingPath(
             G, v, targetColor, altA, M1, M2, M3);
 
-        for (const Edge& e : path) {
+        for (const Edge &e: path) {
             int c = getEdgeColor(e, M1, M2, M3);
-            set<Edge>& src = (c == 0) ? M1 : (c == 1) ? M2 : M3;
+            set<Edge> &src = (c == 0) ? M1 : (c == 1) ? M2 : M3;
             src.erase(e);
             target.insert(e);
         }
     }
 }
 
-vector<Solution> extendMatchings( const AdjacencyListGraph& G, int u, int v, set<Edge> M1, set<Edge> M2, set<Edge> M3) {
+vector<Solution> extendMatchings(const AdjacencyListGraph &G, int u, int v, set<Edge> M1, set<Edge> M2, set<Edge> M3) {
     vector<Solution> solutions = {};
 
 
@@ -168,8 +163,7 @@ vector<Solution> extendMatchings( const AdjacencyListGraph& G, int u, int v, set
     vector<Assignment> assignments =
             generateAssignments(uEdges, vEdges);
 
-    for(const Assignment& a : assignments)
-    {
+    for (const Assignment &a: assignments) {
         set<Edge> M1copy = M1;
         set<Edge> M2copy = M2;
         set<Edge> M3copy = M3;
@@ -191,12 +185,10 @@ vector<Solution> extendMatchings( const AdjacencyListGraph& G, int u, int v, set
         repairMatching(G, M1copy, M2copy, M3copy, 2);
 
 
-
         // calc defect
         int defect = computeDefect(G, M1copy, M2copy, M3copy);
 
-        if(defect == 3)
-        {
+        if (defect == 3) {
             Solution solution;
             solution.M1 = M1copy;
             solution.M2 = M2copy;
@@ -211,11 +203,11 @@ vector<Solution> extendMatchings( const AdjacencyListGraph& G, int u, int v, set
 }
 
 int hammingDistanceForDefect(Solution original, Solution defect) {
-    auto allEdges = [](const Solution& sol) {
+    auto allEdges = [](const Solution &sol) {
         std::set<Edge> edges;
-        for (const Edge& e : sol.M1) edges.insert(e);
-        for (const Edge& e : sol.M2) edges.insert(e);
-        for (const Edge& e : sol.M3) edges.insert(e);
+        for (const Edge &e: sol.M1) edges.insert(e);
+        for (const Edge &e: sol.M2) edges.insert(e);
+        for (const Edge &e: sol.M3) edges.insert(e);
         return edges;
     };
 
@@ -223,20 +215,18 @@ int hammingDistanceForDefect(Solution original, Solution defect) {
 
     set<Edge> originalEdges = allEdges(original);
 
-    for (const Edge& e: originalEdges) {
-
-        if (original.M1.contains(e) !=  defect.M1.contains(e)) {
+    for (const Edge &e: originalEdges) {
+        if (original.M1.contains(e) != defect.M1.contains(e)) {
             distance++;
         }
 
-        if (original.M2.contains(e) !=  defect.M2.contains(e)) {
+        if (original.M2.contains(e) != defect.M2.contains(e)) {
             distance++;
         }
 
-        if (original.M3.contains(e) !=  defect.M3.contains(e)) {
+        if (original.M3.contains(e) != defect.M3.contains(e)) {
             distance++;
         }
-
     }
 
     return distance;

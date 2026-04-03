@@ -8,11 +8,12 @@
 #include "IGraph.h"
 #include "Edge.h"
 
-namespace GraphAlgorithms{
+namespace GraphAlgorithms {
+    int shortest_cycle(const IGraph &graph);
 
-    int shortest_cycle(const IGraph& graph);
     Matrix graph6format_to_matrix(std::string graph6format);
-    set<vector<Edge>> getGraphsWithoutKEdges(const IGraph& graph, int k );
+
+    set<vector<Edge> > getGraphsWithoutKEdges(const IGraph &graph, int k);
 }
 
 #endif //ROCNIKOVY_PROJEKT_GRAPHALGORITHMS_H

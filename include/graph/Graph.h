@@ -22,18 +22,26 @@ public:
     ~Graph();
 
     void printMatrix();
-    vector<vector<int>> getMatrix() const;
 
+    vector<vector<int> > getMatrix() const;
 
 
     int getVerticesCount() const;
-    void copyMatrix(vector<vector<int>> matrix);
+
+    void copyMatrix(vector<vector<int> > matrix);
+
     void removeVertice(int u);
+
     void addEdge(int u, int v, int color = 1);
+
     void removeEdge(int u, int v);
+
     bool hasEdge(int u, int v);
+
     int degree(int u);
+
     vector<int> neighbors(int u);
+
     Matrix generateIncidenceMatrix();
 
 private:
@@ -41,9 +49,8 @@ private:
     int vertices;
 
     void add_transpose();
+
     void convert_to_matrice(string format);
-
-
 };
 
 

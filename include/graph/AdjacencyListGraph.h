@@ -10,38 +10,52 @@
 #include "IGraph.h"
 
 
-
-class AdjacencyListGraph: public IGraph{
-
+class AdjacencyListGraph : public IGraph {
 public:
     explicit AdjacencyListGraph(std::string graph6format);
+
     explicit AdjacencyListGraph(Matrix matrix);
+
     explicit AdjacencyListGraph(std::vector<Edge> edges);
+
     AdjacencyListGraph();
+
     // vertex op
-    void addVertex(const int& vertex) override;
-    void removeVertex(const  int& vertex) override;
-    bool containsVertex(const int& vertex) const override;
+    void addVertex(const int &vertex) override;
+
+    void removeVertex(const int &vertex) override;
+
+    bool containsVertex(const int &vertex) const override;
 
     //edge op
-    void addEdge(const Edge& edge) override;
-    void removeEdge(const Edge& edge) override;
-    bool containsEdge(const Edge& edge) const override;
+    void addEdge(const Edge &edge) override;
+
+    void removeEdge(const Edge &edge) override;
+
+    bool containsEdge(const Edge &edge) const override;
 
     // traverse graph
     std::vector<int> getVertices() const override;
+
     std::vector<Edge> getEdges() const override;
-    std::vector<int> getNeighborVertices(const int& vertex) const override;
-    std::vector<Edge> getNeighborEdges(const int& vertex) const override;
+
+    std::vector<int> getNeighborVertices(const int &vertex) const override;
+
+    std::vector<Edge> getNeighborEdges(const int &vertex) const override;
+
     EdgeList getEdgeList() const override;
+
     // data
     int getVertexCount() const override;
+
     int getEdgeCount() const override;
-    int getDegree(const int& vertex) const override;
+
+    int getDegree(const int &vertex) const override;
 
     void printGraph();
+
 private:
-        std::map<int,std::vector<Edge>> adjacencyList;
+    std::map<int, std::vector<Edge> > adjacencyList;
 };
 
 

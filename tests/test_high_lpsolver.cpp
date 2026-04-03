@@ -37,15 +37,15 @@ TEST(LPSOLVE, INIT) {
     assert(return_status==HighsStatus::kOk);
 
     // Get a const reference to the LP data in HiGHS
-    const HighsLp& lp = highs.getLp();
+    const HighsLp &lp = highs.getLp();
 
     // Solve the model
     return_status = highs.run();
 
     // Get the model status
-    const HighsModelStatus& model_status = highs.getModelStatus();
+    const HighsModelStatus &model_status = highs.getModelStatus();
 
 
-    EXPECT_EQ(return_status,HighsStatus::kOk);
-    EXPECT_EQ(model_status,HighsModelStatus::kOptimal);
+    EXPECT_EQ(return_status, HighsStatus::kOk);
+    EXPECT_EQ(model_status, HighsModelStatus::kOptimal);
 }
