@@ -22,7 +22,7 @@ namespace logger {
         auto search_logger = spdlog::basic_logger_mt("search", "logs/app.log");
         auto error_logger = spdlog::basic_logger_mt("error", "logs/error.log");
 
-        search_logger->set_level(spdlog::level::trace);
+        search_logger->set_level(spdlog::level::err); // TOO set level to trace
         error_logger->set_level(spdlog::level::err);
 
         spdlog::set_default_logger(search_logger);
