@@ -203,17 +203,13 @@ vector<Solution> extendMatchings(const AdjacencyListGraph &G, int u, int v, set<
 }
 
 int hammingDistanceForDefect(Solution original, Solution defect) {
-    auto allEdges = [](const Solution &sol) {
-        std::set<Edge> edges;
-        for (const Edge &e: sol.M1) edges.insert(e);
-        for (const Edge &e: sol.M2) edges.insert(e);
-        for (const Edge &e: sol.M3) edges.insert(e);
-        return edges;
-    };
-
     int distance = 0;
 
-    set<Edge> originalEdges = allEdges(original);
+    set<Edge> originalEdges = set<Edge>();
+
+    for (const Edge &e: original.M1) originalEdges.insert(e);
+    for (const Edge &e: original.M2) originalEdges.insert(e);
+    for (const Edge &e: original.M3) originalEdges.insert(e);
 
     for (const Edge &e: originalEdges) {
         if (original.M1.contains(e) != defect.M1.contains(e)) {

@@ -11,12 +11,20 @@ namespace logger {
     void init();
 }
 
+inline std::shared_ptr<spdlog::logger> search() {
+    return spdlog::get("search");
+}
 
-#define LOG_TRACE(...) ::spdlog::get("search")->trace(__VA_ARGS__)
-#define LOG_DEBUG(...) ::spdlog::get("search")->debug(__VA_ARGS__)
-#define LOG_INFO(...)  ::spdlog::get("search")->info(__VA_ARGS__)
-#define LOG_WARN(...)  ::spdlog::get("search")->warn(__VA_ARGS__)
-#define LOG_ERROR(...) do {spdlog::get("search")->error(__VA_ARGS__);spdlog::get("error")->error(__VA_ARGS__);} while(0)
-#define LOG_CRITICAL(...) do {spdlog::get("search")->critical(__VA_ARGS__);spdlog::get("error")->critical(__VA_ARGS__);} while(0)
+inline std::shared_ptr<spdlog::logger> error() {
+    return spdlog::get("error");
+}
+
+
+#define LOG_TRACE(...)  do { if(auto l = search()) l->trace(__VA_ARGS__); } while(0)
+#define LOG_DEBUG(...)  do { if(auto l = search()) l->debug(__VA_ARGS__); } while(0)
+#define LOG_INFO(...)   do { if(auto l = search()) l->info(__VA_ARGS__); } while(0)
+#define LOG_WARN(...)   do { if(auto l = search()) l->warn(__VA_ARGS__); } while(0)
+#define LOG_ERROR(...) do { if(auto l1 = search()) l1->error(__VA_ARGS__);if(auto l2 = error())  l2->error(__VA_ARGS__);} while(0)
+#define LOG_CRITICAL(...) do { if(auto l1 = search()) l1->critical(__VA_ARGS__); if(auto l2 = error())  l2->critical(__VA_ARGS__); } while(0)
 
 #endif //ROCNIKOVY_PROJEKT_LOG_H
