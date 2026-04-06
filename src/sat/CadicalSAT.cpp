@@ -13,12 +13,13 @@
 
 CadicalSAT::CadicalSAT() {
     solver = std::make_unique<CaDiCaL::Solver>();
+    solver->set("factor", 0);
+    solver->set("factorcheck", 0);
 }
 
-void CadicalSAT::add_clause(std::vector<std::pair<int, bool>> literal) {
-
-    for (std::pair<int,bool> l : literal){
-        max_lit = std::max(max_lit,l.first);
+void CadicalSAT::add_clause(std::vector<std::pair<int, bool> > literal) {
+    for (std::pair<int, bool> l: literal) {
+        max_lit = std::max(max_lit, l.first);
         solver->add(((l.second ? (1) : (-1)) * l.first));
     }
     solver->add(0);
@@ -41,7 +42,6 @@ bool CadicalSAT::variable_value(int var) {
 }
 
 std::vector<bool> CadicalSAT::getAnswer() {
-
     std::vector<bool> answer;
 
     for (int i = 0; i <= max_lit; i++) {
@@ -49,7 +49,6 @@ std::vector<bool> CadicalSAT::getAnswer() {
     }
 
     return answer;
-
 }
 
 

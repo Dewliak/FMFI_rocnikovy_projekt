@@ -12,26 +12,36 @@
 #include "graph/IGraph.h"
 
 
-class  ColoringSAT {
+class ColoringSAT {
 public:
-    ColoringSAT(const IGraph& g, int color_count=3);
-    ColoringSAT(const ColoringSAT&) = delete;
-    ColoringSAT& operator=(const ColoringSAT&) = delete;
+    ColoringSAT(const IGraph &g, int color_count = 3);
+
+    ColoringSAT(const ColoringSAT &) = delete;
+
+    ColoringSAT &operator=(const ColoringSAT &) = delete;
 
     void encodeConstraints();
+
     bool solve();
+
     std::vector<int> getColoring();
+
+    void breakColorSymmetry();
+
     // solution mapping vertex -> color
-    std::vector<std::vector<int>> getAllColoring();
+    std::vector<std::vector<int> > getAllColoring();
+
 private:
     void node_atleast_one_color(); // constraint
     void no_multiple_colors_of_node(); // constraint
     void adjecent_nodes_differnet_colors();
 
-    const IGraph& graph;
+    const IGraph &graph;
     bool satisfied = false;
     int numColors;
-    int var(int vertex, int color);
+
+    int var(int edge, int color);
+
     std::unique_ptr<ISAT> satSolver;
 };
 

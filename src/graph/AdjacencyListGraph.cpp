@@ -3,7 +3,6 @@
 //
 
 
-
 #include <algorithm>
 #include <cassert>
 #include <format>
@@ -13,14 +12,15 @@
 #include "graph/AdjacencyListGraph.h"
 #include "graph/GraphAlgorithms.h"
 
-AdjacencyListGraph::AdjacencyListGraph(std::string graph6format) : AdjacencyListGraph(GraphAlgorithms::graph6format_to_matrix(graph6format)) {
+AdjacencyListGraph::AdjacencyListGraph(std::string graph6format) : AdjacencyListGraph(
+    GraphAlgorithms::graph6format_to_matrix(graph6format)) {
 }
 
 AdjacencyListGraph::AdjacencyListGraph(Matrix matrix) {
-    for (int i =0; i < matrix.get_row_count(); i++) {
-        for (int j = i+1; j < matrix.get_col_count(); j++) {
-            if (matrix(i,j) != 0) {
-                AdjacencyListGraph::addEdge(Edge(i,j));
+    for (int i = 0; i < matrix.get_row_count(); i++) {
+        for (int j = i + 1; j < matrix.get_col_count(); j++) {
+            if (matrix(i, j) != 0) {
+                AdjacencyListGraph::addEdge(Edge(i, j));
             }
         }
     }
@@ -41,8 +41,6 @@ AdjacencyListGraph::AdjacencyListGraph(std::vector<Edge> edges) {
         }
         AdjacencyListGraph::addEdge(e);
     }
-
-
 }
 
 AdjacencyListGraph::AdjacencyListGraph() = default;
@@ -61,7 +59,7 @@ void AdjacencyListGraph::removeVertex(const int &vertex) {
         throw std::runtime_error("Vertex doesn't exists");
     }
 
-    if (!adjacencyList[vertex].empty()){
+    if (!adjacencyList[vertex].empty()) {
         throw std::runtime_error("Vertex is not empty");
     }
 
@@ -81,7 +79,6 @@ void AdjacencyListGraph::addEdge(const Edge &edge) {
 
     adjacencyList.at(f).push_back(edge);
     adjacencyList.at(s).push_back(edge);
-
 }
 
 void AdjacencyListGraph::removeEdge(const Edge &edge) {
@@ -96,8 +93,7 @@ void AdjacencyListGraph::removeEdge(const Edge &edge) {
 
     if (ff != adjacencyList.at(f).end()) {
         adjacencyList.at(f).erase(ff);
-    }
-    else {
+    } else {
         throw std::runtime_error("Edge not found");
     }
 
@@ -105,8 +101,7 @@ void AdjacencyListGraph::removeEdge(const Edge &edge) {
 
     if (fs != adjacencyList.at(s).end()) {
         adjacencyList.at(s).erase(fs);
-    }
-    else {
+    } else {
         throw std::runtime_error("Edge not found");
     }
 
@@ -120,7 +115,6 @@ void AdjacencyListGraph::removeEdge(const Edge &edge) {
 }
 
 bool AdjacencyListGraph::containsEdge(const Edge &edge) const {
-
     int f = edge.getFirst();
     int s = edge.getSecond();
 
@@ -129,14 +123,14 @@ bool AdjacencyListGraph::containsEdge(const Edge &edge) const {
     }
 
     const auto it = std::find(adjacencyList.at(f).begin(), adjacencyList.at(f).end(), edge);
-    
+
     return (it != adjacencyList.at(f).end());
 }
 
 std::vector<int> AdjacencyListGraph::getVertices() const {
     std::vector<int> v = {};
 
-    for (const auto& it: adjacencyList) {
+    for (const auto &it: adjacencyList) {
         v.push_back(it.first);
     }
 
@@ -146,7 +140,7 @@ std::vector<int> AdjacencyListGraph::getVertices() const {
 std::vector<Edge> AdjacencyListGraph::getEdges() const {
     std::set<Edge> edges_set = {};
 
-    for (const auto& it: adjacencyList) {
+    for (const auto &it: adjacencyList) {
         for (const Edge e: it.second) {
             edges_set.insert(e);
         }
@@ -155,19 +149,16 @@ std::vector<Edge> AdjacencyListGraph::getEdges() const {
     std::vector<Edge> edges = {};
     edges.assign(edges_set.begin(), edges_set.end());
     return edges;
-
 }
 
-std::vector<int> AdjacencyListGraph::getNeighborVertices(const int &vertex) const{
-
+std::vector<int> AdjacencyListGraph::getNeighborVertices(const int &vertex) const {
     assert(containsVertex(vertex));
     std::vector<int> neighbor = {};
 
     for (const Edge e: adjacencyList.at(vertex)) {
         if (e.getFirst() == vertex) {
             neighbor.push_back(e.getSecond());
-        }
-        else {
+        } else {
             neighbor.push_back(e.getFirst());
         }
     }
@@ -175,24 +166,23 @@ std::vector<int> AdjacencyListGraph::getNeighborVertices(const int &vertex) cons
     return neighbor;
 }
 
-std::vector<Edge> AdjacencyListGraph::getNeighborEdges(const int& vertex) const {
-
+std::vector<Edge> AdjacencyListGraph::getNeighborEdges(const int &vertex) const {
     assert(containsVertex(vertex));
 
     std::vector<Edge> neighbor = {};
-    neighbor.assign(adjacencyList.at(vertex).begin(),adjacencyList.at(vertex).end());
+    neighbor.assign(adjacencyList.at(vertex).begin(), adjacencyList.at(vertex).end());
 
     return neighbor;
 }
 
 EdgeList AdjacencyListGraph::getEdgeList() const {
-    std::map<Edge, int>  edge_map = {};
+    std::map<Edge, int> edge_map = {};
     std::vector<Edge> edge_list = {};
 
     // invariant [i,j] always i < j
 
-    int counter =0;
-    for (const auto& it: adjacencyList) {
+    int counter = 0;
+    for (const auto &it: adjacencyList) {
         const int first_vertex = it.first;
 
         for (Edge e: it.second) {
@@ -208,7 +198,6 @@ EdgeList AdjacencyListGraph::getEdgeList() const {
 
 
     return EdgeList(edge_map, edge_list);
-
 }
 
 int AdjacencyListGraph::getVertexCount() const {
@@ -220,11 +209,11 @@ int AdjacencyListGraph::getEdgeCount() const {
     // we are counting eveything twice, that should be
 
     int amount = 0;
-    for (const auto& it: adjacencyList) {
+    for (const auto &it: adjacencyList) {
         amount += it.second.size();
     }
 
-    return  (int)amount/2;
+    return (int) amount / 2;
 }
 
 int AdjacencyListGraph::getDegree(const int &vertex) const {
@@ -236,7 +225,7 @@ int AdjacencyListGraph::getDegree(const int &vertex) const {
 
 void AdjacencyListGraph::printGraph() {
     std::cout << "Printing graph: " << std::endl;
-    for (const auto& it: adjacencyList) {
+    for (const auto &it: adjacencyList) {
         std::cout << "[ " << it.first << " ]:" << std::endl;;
         for (const Edge e: it.second) {
             std::cout << e.getFirst() << "->" << e.getSecond() << std::endl;
@@ -244,5 +233,3 @@ void AdjacencyListGraph::printGraph() {
         std::cout << "--------------------" << std::endl;
     }
 }
-
-

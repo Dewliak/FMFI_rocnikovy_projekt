@@ -8,20 +8,18 @@
 #include <iostream>
 
 Matrix::Matrix() : row_count(0), col_count(0) {
-
 }
 
-Matrix::Matrix(vector<vector<int>> matrix) {
+Matrix::Matrix(vector<vector<int> > matrix) {
     this->row_count = matrix.size();
     this->col_count = matrix[0].size();
     data = matrix;
-
 }
 
 Matrix::Matrix(int row_count, int column_count) {
     this->row_count = row_count;
     this->col_count = column_count;
-    data = vector<vector<int>>(row_count, vector<int>(column_count, 0));
+    data = vector<vector<int> >(row_count, vector<int>(column_count, 0));
 }
 
 
@@ -32,7 +30,7 @@ const int &Matrix::get(const int i, const int j) const {
     return data[i][j];
 }
 
-vector<vector<int>> Matrix::get_data() const {
+vector<vector<int> > Matrix::get_data() const {
     return data;
 }
 
@@ -43,7 +41,7 @@ void Matrix::set(int i, int j, int value) {
     data[i][j] = value;
 }
 
-int Matrix::get_row_count() const{
+int Matrix::get_row_count() const {
     return row_count;
 }
 
@@ -53,67 +51,65 @@ int Matrix::get_col_count() const {
 
 Matrix Matrix::transpose() {
     Matrix result(col_count, row_count);
-    for (int i=0; i < col_count; i++) {
-        for (int j=0; j < row_count; j++) {
-            result.set(i,j,data[j][i]);
+    for (int i = 0; i < col_count; i++) {
+        for (int j = 0; j < row_count; j++) {
+            result.set(i, j, data[j][i]);
         }
     }
 
     return result;
 }
 
-const int&  Matrix::operator()(int i, int j) const {
+const int &Matrix::operator()(int i, int j) const {
     return data[i][j];
 }
 
 bool Matrix::inBounds(int i, int j) const {
-
     return (i >= 0 && i < get_row_count()) && (j >= 0 && j < get_col_count());
 }
 
-bool Matrix::same_size(const Matrix& other) const {
-    cout << row_count << " - " << other.get_row_count() << " || " << col_count << " - " << other.col_count << endl;
+bool Matrix::same_size(const Matrix &other) const {
     return (row_count == other.get_row_count() && col_count == other.get_col_count());
 }
 
-Matrix Matrix::operator+(const Matrix& other) const {
+Matrix Matrix::operator+(const Matrix &other) const {
     if (!same_size(other)) {
         throw runtime_error("Matrix has to be the same size");
     }
     Matrix result(get_data());
 
-    for (int i =0; i < row_count; i++) {
+    for (int i = 0; i < row_count; i++) {
         for (int j = 0; j < col_count; j++) {
-            result.set(i,j,result(i,j) + other(i,j));
+            result.set(i, j, result(i, j) + other(i, j));
         }
     }
 
     return result;
 }
 
-Matrix Matrix::operator-(const Matrix& other) const {
+Matrix Matrix::operator-(const Matrix &other) const {
     if (!same_size(other)) {
         throw runtime_error("Matrix has to be the same size");
     }
     Matrix result(get_data());
 
-    for (int i =0; i < row_count; i++) {
+    for (int i = 0; i < row_count; i++) {
         for (int j = 0; j < col_count; j++) {
-            result.set(i,j,result(i,j) - other(i,j));
+            result.set(i, j, result(i, j) - other(i, j));
         }
     }
 
     return result;
 }
 
-bool Matrix::operator==(const Matrix& other) const {
+bool Matrix::operator==(const Matrix &other) const {
     if (!same_size(other)) {
         return false;
     }
 
-    for (int i =0; i < row_count; i++) {
+    for (int i = 0; i < row_count; i++) {
         for (int j = 0; j < col_count; j++) {
-            if (this->get(i,j) != other(i,j)) {
+            if (this->get(i, j) != other(i, j)) {
                 return false;
             }
         }
@@ -124,8 +120,8 @@ bool Matrix::operator==(const Matrix& other) const {
 string Matrix::to_string() const {
     string repr = "";
     for (int i = 0; i < row_count; i++) {
-        for (int j =0; j < col_count;j++) {
-            repr += std::to_string(get(i,j));
+        for (int j = 0; j < col_count; j++) {
+            repr += std::to_string(get(i, j));
             repr += " ";
         }
         repr += "\n";
@@ -143,9 +139,9 @@ Matrix Matrix::operator*(const Matrix &other) const {
 
     for (int i = 0; i < row_count; i++) {
         for (int j = 0; j < other.get_col_count(); j++) {
-            result.set(i,j,0);
+            result.set(i, j, 0);
             for (int k = 0; k < other.get_row_count(); k++) {
-                result.set(i,j,result.get(i,j) + get(i,k) * other(k,j));
+                result.set(i, j, result.get(i, j) + get(i, k) * other(k, j));
                 //rslt[i][j] += mat1[i][k] * mat2[k][j];
             }
         }
@@ -157,9 +153,9 @@ Matrix Matrix::operator*(const Matrix &other) const {
 Matrix Matrix::operator*(int scalar) const {
     Matrix result(get_data());
 
-    for (int i =0; i < row_count; i++) {
+    for (int i = 0; i < row_count; i++) {
         for (int j = 0; j < col_count; j++) {
-            result.set(i,j,scalar*result(i,j) );
+            result.set(i, j, scalar * result(i, j));
         }
     }
 
@@ -167,15 +163,14 @@ Matrix Matrix::operator*(int scalar) const {
 }
 
 Matrix Matrix::generateIncidenceMatrix(const Matrix &matrix) {
-
     int vertices = matrix.get_row_count();
     int c = 0;
     int edge_count = 0;
     // naive, have to me really optimised
 
-    for (int i =0; i < vertices; i++) {
-        for (int j = i+1; j < vertices; j++) {
-            if (matrix(i,j) != 0) {
+    for (int i = 0; i < vertices; i++) {
+        for (int j = i + 1; j < vertices; j++) {
+            if (matrix(i, j) != 0) {
                 edge_count++;
             }
         }
@@ -183,24 +178,19 @@ Matrix Matrix::generateIncidenceMatrix(const Matrix &matrix) {
 
     Matrix result(vertices, edge_count);
 
-    for (int i =0; i < vertices; i++) {
-        for (int j = i+1; j < vertices; j++) {
+    for (int i = 0; i < vertices; i++) {
+        for (int j = i + 1; j < vertices; j++) {
+            if (matrix(i, j) != 0) {
+                result.set(i, c, 1);
 
-            if (matrix(i,j) != 0) {
-
-                result.set(i,c,1);
-
-                result.set(j,c,1);
+                result.set(j, c, 1);
                 c++;
             }
-
-
         }
     }
 
 
     return result;
-
 }
 
 bool Matrix::isSquare(const Matrix &matrix) {
@@ -209,10 +199,10 @@ bool Matrix::isSquare(const Matrix &matrix) {
 }
 
 Matrix Matrix::identity(size_t n) {
-    Matrix result(n,n);
+    Matrix result(n, n);
 
-    for (int i =0; i < n;i++) {
-        result.set(i,i,1);
+    for (int i = 0; i < n; i++) {
+        result.set(i, i, 1);
     }
 
     return result;
@@ -222,9 +212,9 @@ bool Matrix::isSymetrical(const Matrix &matrix) {
     if (!Matrix::isSquare(matrix)) {
         throw "The matrix what is not a square matrix can't be symetrical";
     }
-    for (int i =0; i < matrix.get_row_count(); i++) {
-        for (int j =i+1; j < matrix.get_col_count(); j++) {
-            if (matrix(i,j) != matrix(j,i)) {
+    for (int i = 0; i < matrix.get_row_count(); i++) {
+        for (int j = i + 1; j < matrix.get_col_count(); j++) {
+            if (matrix(i, j) != matrix(j, i)) {
                 return false;
             }
         }

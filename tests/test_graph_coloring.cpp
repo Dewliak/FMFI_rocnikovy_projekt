@@ -20,8 +20,8 @@ TEST(GraphColoring, Colorable1) {
     */
     string format = "Cl";
     AdjacencyListGraph g(format);
-    ColoringSAT s(g,3);
-    EXPECT_EQ(s.solve(),true);
+    ColoringSAT s(g, 3);
+    EXPECT_EQ(s.solve(), true);
 }
 
 
@@ -39,7 +39,7 @@ TEST(GraphColoring, NotColorable1) {
     string format = "J?@~?@?@"; // Petersen-graph
     AdjacencyListGraph g(format);
 
-    ColoringSAT s(g,3);
+    ColoringSAT s(g, 3);
 
     EXPECT_EQ(s.solve(), false);
 }

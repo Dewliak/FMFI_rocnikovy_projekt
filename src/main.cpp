@@ -1,300 +1,342 @@
-#include "cadical.hpp"
 #include <iostream>
 #include <vector>
 #include <string>
 #include <bitset>
 #include <filesystem>
 #include <fstream>
+#include <sys/syslog.h>
 
-#include "graph/AdjacencyListGraph.h"
-#include "sat/ColoringSAT.h"
-#include <cassert>
 
 #include "graph/GraphAlgorithms.h"
-
-
 #include "defect_search/structures.h"
-#include "defect_search/assignmentGeneration.h"
-#include "defect_search/defectComputing.h"
+#include "export/exportPython.h"
+
+
+#include "Pipeline.h"
 #include "defect_search/utilities.h"
 
-#include "export/exportPython.h"
+#include "logger.h"
 
 using namespace std;
 
 
+void exportData(
+    const GraphColoringData &coloringData,
+    const Solution &defectSolution,
+    SearchStrategy search_strategy,
+    std::ostream &outStream = std::cout) {
+    // we have graph6 format
+
+    string pm1Encoding, pm2Encoding, pm3Encoding, originalColoring;
+    string strategy;
 
 
-vector<Solution> solutions;
-
-
-void printMatchings(const std::set<Edge>& M1,
-                    const std::set<Edge>& M2,
-                    const std::set<Edge>& M3)
-{
-    std::cout << "Matching M1:\n";
-    for(const Edge& e: M1) {
-        std::cout << "(" << e.getFirst() << "," << e.getSecond() << ") ";
+    switch (search_strategy) {
+        case SearchStrategy::BruteForce:
+            strategy = "BF";
+            break;
+        case SearchStrategy::ILP:
+            strategy = "ILP";
+            break;
+        case SearchStrategy::Incremental:
+            strategy = "INC";
+            break;
+        default:
+            strategy = "UNK";
+            break;
     }
-    std::cout << "\n";
+    int hammingDistance = hammingDistanceForDefect(coloringData.originalSolution, defectSolution);
+    // get cannonical form, tj. incremental ordering of edges
+    vector<Edge> edges = coloringData.originalGraphEdgeList.getEdgeList();
+    sort(edges.begin(), edges.end());
 
-    std::cout << "Matching M2:\n";
-    for(const Edge& e: M2) {
-        std::cout << "(" << e.getFirst() << "," << e.getSecond() << ") ";
-    }
-    std::cout << "\n";
+    pm1Encoding.reserve(edges.size());
+    pm2Encoding.reserve(edges.size());
+    pm3Encoding.reserve(edges.size());
+    originalColoring.reserve(edges.size());
 
-    std::cout << "Matching M3:\n";
-    for(const Edge& e: M3) {
-        std::cout << "(" << e.getFirst() << "," << e.getSecond() << ") ";
+    for (const Edge &edge: edges) {
+        //cout << "DEBUG: (" << edge.getFirst() << ", " << edge.getSecond() << ")";
+
+        pm1Encoding += defectSolution.M1.contains(edge) ? "1" : "0";
+        pm2Encoding += defectSolution.M2.contains(edge) ? "1" : "0";
+        pm3Encoding += defectSolution.M3.contains(edge) ? "1" : "0";
+
+
+        // it is guranteed that edge is exactly in on matching, or none since the grapg (G - {u,v}) is 3-edge colorable
+
+
+        if (coloringData.originalSolution.M1.contains(edge)) {
+            originalColoring += "1";
+        } else if (coloringData.originalSolution.M2.contains(edge)) {
+            originalColoring += "2";
+        } else if (coloringData.originalSolution.M3.contains(edge)) {
+            originalColoring += "3";
+        } else {
+            originalColoring += "0";
+        }
+
+        //cout << (defectSolution.M1.contains(edge) ? "1" : "0") << " - ";
+        //cout << (defectSolution.M2.contains(edge) ? "1" : "0") << " - ";
+        //cout << (defectSolution.M3.contains(edge) ? "1" : "0") << endl;
     }
-    std::cout << "\n";
+
+    outStream << coloringData.originalGraphFormat << ","
+            << strategy << ","
+            << hammingDistance << ","
+            << coloringData.vertex1 << ","
+            << coloringData.vertex2 << ","
+            << originalColoring << ","
+            << pm1Encoding << ","
+            << pm2Encoding << ","
+            << pm3Encoding << "\n";
 }
 
-int hamming_distance(vector<pair<Edge,int>> major_edges, vector<pair<Edge,int>> minor_edges) {
-    // the major edges are the constant one, in the model the G', so the graph without the defect
-    //cout << "Calculating hamming" << endl;
-    unordered_map<Edge,int> colors = {};
-    int distance = 0;
-    for (pair<Edge,int> major_edge: major_edges) {
-        colors[major_edge.first] = major_edge.second;
-    }
+#define DEBUG_SINGLE_GRAPH 0
+#define CALC_BRUTEFORCE 0
+#define CALC_ILP 1
+#define ALL_COLORS 1
+#define ALL_PAIRS 1
 
-    for (pair<Edge,int> minor_edge: minor_edges) {
-        if (!colors.contains(minor_edge.first)) {
-            distance++;
-            continue;
+#define SNARK_DEFECT 3
+#define FAULTY_SEARCH_OUTPUT_FILENAME "../export_Data/faulty_search.csv"
+
+SearchStrategy STRATEGY = SearchStrategy::ILP;
+bool ALL_PAIR = true;
+bool ALL_COLOR = true;
+string OUTPUT_FILENAME = "../export_data/export.csv";
+string INPUT_FORMAT;
+int main(int argc, char* argv[]) {
+
+    logger::init();
+
+
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+
+        if (arg == "--ilp") {
+            STRATEGY = SearchStrategy::ILP;
         }
-
-        if (colors[minor_edge.first] != minor_edge.second) {
-            distance++;
+        else if (arg == "--bruteforce") {
+            STRATEGY = SearchStrategy::BruteForce;
         }
-    }
-
-    return distance;
-}
-
-
-
-void func(string graph6format, int vertex1, int vertex2) {
-
-    //int min_h_distance = 10e6;
-    vector<pair<Edge,int>> minEdges = {};
-
-    AdjacencyListGraph original_graph(graph6format);
-
-    vector<int> neighbours_v1 = {}; // neighbours of vertex1
-    vector<int> neighbours_v2 = {}; // neighbours of vertex2
-
-    /**
-         * 1. Check constrains
-         *
-         *  does graph has edge u-v
-    */
-
-    EdgeList og_edge_list = original_graph.getEdgeList();
-
-
-    if (!original_graph.containsEdge(Edge(vertex1,vertex2))) {
-        throw runtime_error("No such edge");
-    }
-
-    if (!original_graph.containsVertex(vertex1) || !original_graph.containsVertex(vertex2)) {
-        throw runtime_error("No vertex1 or vertex2");
-    }
-
-    /**
-         * 2. Remove vertices u,v and all of its neighborous edges
-         *  since we are adjusting the original(we dont make a new copy) G will remain that new graph
-    */
-
-    // Create G' = G - {vertex1,vertex2}
-
-    AdjacencyListGraph G(graph6format); // G'
-
-    // remove all edges of vertex1 and vertex2 in
-
-    // store neightbours
-    for (int neighbour: G.getNeighborVertices(vertex1)) {
-        if (neighbour == vertex2) continue;
-        neighbours_v1.push_back(neighbour);
-    }
-
-    for (int neighbour: G.getNeighborVertices(vertex2)) {
-        if (neighbour == vertex1) continue;
-        neighbours_v2.push_back(neighbour);
-    }
-
-    vector<Edge> deleted_edges = {};
-    for (Edge e: G.getNeighborEdges(vertex1)){
-
-
-         deleted_edges.push_back(e); // save edges so we can restore later
-         G.removeEdge(e);
-     }
-
-    for (Edge e: G.getNeighborEdges(vertex2)) {
-        deleted_edges.push_back(e); // save edges so we can restore later
-        G.removeEdge(e);
-    }
-
-    //G.removeVertex(vertex1);
-    //G.removeVertex(vertex2);
-
-
-
-    /**
-         * 3. Find coloring for G
-         *  since it was a critical snark it should have, if not throw error
-    */
-
-    // Find coloring G' => EdgeList
-    ColoringSAT myColoringSAT(G,3);
-    vector<Edge> edge_list =  G.getEdgeList().getEdgeList();
-
-    myColoringSAT.encodeConstraints();
-    std::cerr << "SAT constructed" << std::endl;
-
-    vector<pair<Edge,int>> edge_list_color = {};
-    if (myColoringSAT.solve()) {
-        //std::cerr << "SAT solved" << std::endl;
-        int index = 0;
-        for (int i: myColoringSAT.getColoring()) {
-            edge_list_color.push_back(std::make_pair(edge_list.at(index), i));
-            index++;
+        else if (arg == "-f") {
+            if (i + 1 < argc) {
+                OUTPUT_FILENAME = argv[++i]; // consume next arg
+            } else {
+                std::cerr << "-f requires filename\n";
+                return 1;
+            }
+        }
+        else if (arg == "-g") {
+            if (i + 1 < argc) {
+                INPUT_FORMAT = argv[++i]; // consume next arg
+            } else {
+                std::cerr << "-g requires graph6 format\n";
+                return 1;
+            }
+        }
+        else if (arg == "--one_color") {
+            ALL_COLOR = false;
+        }
+        else if (arg == "--all_colors") {
+            ALL_COLOR = true;
+        }
+        else if (arg == "--one_pair") {
+            ALL_PAIR = false;
+        }
+        else if (arg == "--all_pairs") {
+            ALL_PAIR = true;
+        }
+        else {
+            std::cerr << "Unknown argument: " << arg << "\n";
+            return 1;
         }
     }
-    else {
-        std::cerr<< "SAT failed" << std::endl;
-        assert(false); // shouldnt fail the sat
+
+
+    std::ofstream outFile;
+    outFile.open(OUTPUT_FILENAME, std::ios::app);
+
+    if (INPUT_FORMAT.empty()) {
+        throw "Invalid G6 format!";
     }
 
-    set<Edge> M1 = {}, M2 = {}, M3 = {}; // create matchings sets
 
-    for (pair<Edge,int> edge_pair: edge_list_color) {
-        switch (edge_pair.second) {
-            case 0:
-                M1.insert(edge_pair.first);
+    LOG_INFO("WORKING ON GRAPH: {}", INPUT_FORMAT);
+
+    AdjacencyListGraph graph(INPUT_FORMAT);
+
+    vector<int> vertices = graph.getVertices();
+
+    int allEdgeCount = graph.getEdgeCount();
+    int vertexCounter = 1;
+    int colorCounter = 1;
+
+    for (int i = 0; i < vertices.size(); i++) {
+        for (int j = i + 1; j < vertices.size(); j++) {
+
+            int vertex1 = vertices.at(i);
+            int vertex2 = vertices.at(j);
+
+            if (!graph.containsEdge(Edge(vertex1, vertex2))) {
+                continue;
+            }
+
+            std::vector<GraphColoringData> allData;
+
+            LOG_INFO("Working on pair {} - {}", vertex1, vertex2);
+
+            if (ALL_COLOR){
+                allData = generateAllColoring(INPUT_FORMAT, vertex1, vertex2);
+            }
+            else {
+                allData = {generateColoring(INPUT_FORMAT, vertex1, vertex2)};
+            }
+
+            colorCounter = 1;
+            for (const GraphColoringData &data: allData) {
+
+                LOG_INFO("    Vertex[{}/{}] --- Color[{}/{}]", vertexCounter, allEdgeCount, colorCounter, allData.size());
+                colorCounter++;
+
+                Solution solution = findClosestWithDefectThree(
+                    data.originalGraphFormat, data.modifiedGraphEdgeList, data.originalSolution, data.baseline,
+                    STRATEGY);
+
+
+                if (computeDefect(graph,solution) == SNARK_DEFECT) {
+                    exportData(data, solution, STRATEGY, outFile);
+                }
+                else {
+                    LOG_ERROR("    Error in (Vertex[{}/{}] --- Color[{}/{}]) - solution did not have defect 3", vertexCounter, allEdgeCount, colorCounter, allData.size());
+
+                    std::ofstream errorOut;
+                    errorOut.open(FAULTY_SEARCH_OUTPUT_FILENAME, std::ios::app);
+                    exportData(data, solution, STRATEGY, errorOut);
+                    errorOut.close();
+                }
+            }
+
+            if (!ALL_PAIR) {
+                i = vertices.size() + 1;
                 break;
-            case 1:
-                M2.insert(edge_pair.first);
-                break;
-            case 2:
-                M3.insert(edge_pair.first);
-                break;
-            default: ;
+            }
+            vertexCounter++;
         }
     }
 
+    cout << "Finished working on graph : " << INPUT_FORMAT << endl;
+    outFile.close();
+    return 0;
 
-    map<int,int> vertex_missing_color = {};
-
-    for (int vertex: neighbours_v1) {
-        vertex_missing_color[vertex] = getMissingVertexColor(vertex, G, M1, M2, M3);
-    }
-
-    for (int vertex: neighbours_v2) {
-        vertex_missing_color[vertex] = getMissingVertexColor(vertex, G, M1, M2, M3);
-    }
-
-
-    cout << M1.size() <<  " " << M2.size() << " " << M3.size() << endl;
-
-
-    /**
-         * 4. Readd the vertices u,v
-         *
-         */
-
-    G.addVertex(vertex1);
-    G.addVertex(vertex2);
-
-    for (Edge edge: deleted_edges) {
-        G.addEdge(edge);
-    }
-
-    /**
-     * 5. Find
-     */
-    vector<Solution> solutions = {};
-
-    solutions = extendMatchings(G,vertex1,vertex2,M1,M2,M3);
-
-    for (auto solution : solutions) {
-        printMatchings(solution.M1,solution.M2,solution.M3);
-        break;
-    }
-
-
-    // Export for visualization
-
-    Solution original_solution;
-
-    original_solution.M1 = M1;
-    original_solution.M2 = M2;
-    original_solution.M3 = M3;
-
-    exportPython(original_solution, "../export_data/original_sol.txt", og_edge_list.edge_list, true);
-
-    for (Solution solution : solutions) {
-        exportPython(solution,"../export_data/sol.txt",og_edge_list.edge_list, false);
-        break;
-    }
-
-
-    // DEBUG:
-    cout << "Found coloring: " << endl;
-    for (pair<Edge,int> edge_pair: edge_list_color) {
-        cout << "( " << edge_pair.first.getFirst() << " - " << edge_pair.first.getSecond() << " ) : " << edge_pair.second << endl;
-    }
-
-}
-
-
-
-#
-
-
-#define DEBUG_SINGLE_GRAPH 1
-
-int main() {
 
 #if DEBUG_SINGLE_GRAPH
 
-    std::string s = "Y?HI@eOGG??B_??@g???T?a??@k?????CO?????gO?????L@??O???E_"; //"Q?hY@eOGG??B_??@g???T?a??@g";   // your test graph6 string
+
+    std::string s = "Q?hY@eOGG??B_??@g???T?a??@g"; // your test graph6 string
     std::cout << "Running single test graph\n";
-    func(s, 1, 5);
+
+    //GraphColoringData data = generateColoring("I?h]@eOWG", 0 ,4);
+    //GraphColoringData data = generateColoring("U?GY@COOGCC?@??Ap??a@?G??DK?OA?CE??G?D?G", 1 ,9);
+    //GraphColoringData data = generateColoring("[CHI@e?GKOGA???@__OC???_??O_?O?@??H????w@?G??A???A????B_??_O??AH", 6 ,7);
+    //GraphColoringData data = generateColoring("Q?hY@eOGG??B_??@g???T?a??@g", 3,5);
+    //GraphColoringData data = generateColoring("S?gQ@eOOGC?AP??BO@@?GB????o?E???[", 0,8);
+    //GraphColoringData data = generateColoring("c??A@eO?CCC?O??B????hA???@GG??@_C_?GD??G?????O`O??A???__A?@??C?B??G??K???C??????@??CG????????Ag????W?????L", 8,19);
+
+    GraphColoringData data = generateColoring(
+        "c?GY?EO?GC??P??BP???_GO???O?E???A?G?OC??a?????F?@?????_C???O?@G???AO?????G??I?????AK??@@?????`G?G_??????E@", 0,
+        20);
+
+    // print edges
+
+
+    //GraphColoringData data = generateColoring(s, 1 ,6);
+    exportPython(data.originalSolution, "../export_data/original_coloring.txt", data.originalGraphEdgeList.edge_list,
+                 true);
+
+#if CALC_ILP
+    Solution ilpSolution = findClosestWithDefectThree(data.originalGraphFormat, data.modifiedGraphEdgeList,
+                                                      data.originalSolution, data.baseline, SearchStrategy::ILP);
+    exportPython(ilpSolution, "../export_data/ilp_solution.txt", data.originalGraphEdgeList.edge_list, true);
+
+    exportData(data, ilpSolution, SearchStrategy::ILP);
+
+
+#endif
+
+#if CALC_BRUTEFORCE
+    Solution bruteforceSolution = findClosestWithDefectThree(data.originalGraphFormat, data.modifiedGraphEdgeList,
+                                                             data.originalSolution, data.baseline,
+                                                             SearchStrategy::BruteForce);
+    exportPython(bruteforceSolution, "../export_data/bruteforce_solution.txt", data.originalGraphEdgeList.edge_list,
+                 true);
+#endif
+
 
 #else
 
-    string format = "C~";
-
+    //string format = "C~";
     std::vector<std::string> filenames = {"../data/4_edge_critical_snarks.18.g6"};
 
     std::cout << "Working dir: "
-              << std::filesystem::current_path() << "\n";
+            << std::filesystem::current_path() << "\n";
 
-    for (std::string filename : filenames) {
-
+    for (const std::string &filename: filenames) {
         std::ifstream file(filename);
 
         std::cout << "file is opened: " << filename << std::endl;
 
         string s;
-        int graph_counter = 1;
+        int vertex_counter = 1;
+        int color_counter = 1;
 
         while (getline(file, s)) {
+            int graph_counter = 1;
 
-            std::cout << "Graph #" << graph_counter << " loaded" << std::endl;
+            cout << "Working on: #" << graph_counter << endl;
+            AdjacencyListGraph graph(s);
 
-            func(s,0,4);
+            vector<int> vertices = graph.getVertices();
+            int all_edges = graph.getEdgeCount();
+            vertex_counter = 1;
+            for (int i = 0; i < vertices.size(); i++) {
+                for (int j = i + 1; j < vertices.size(); j++) {
+                    int v1 = vertices.at(i);
+                    int v2 = vertices.at(j);
+                    if (!graph.containsEdge(Edge(v1, v2))) {
+                        continue;
+                    }
+                    //cout << "Vertex pair: " << v1 << " " << v2 << endl;
 
-            graph_counter++;
+#if ALL_COLORS
+                    std::vector<GraphColoringData> allData = generateAllColoring(s, v1, v2);
+#else
+                    std::vector<GraphColoringData> allData = {generateColoring(s, v1, v2)};
+#endif
+
+                    color_counter = 1;
+                    for (const GraphColoringData &data: allData) {
+                        cout << "Calculating: Vertex[" << vertex_counter << "/" << all_edges << "] Color[" <<
+                                color_counter << "/" << allData.size() << "]\n";
+                        color_counter++;
+                        Solution ilpSolution = findClosestWithDefectThree(
+                            data.originalGraphFormat, data.modifiedGraphEdgeList, data.originalSolution, data.baseline,
+                            SearchStrategy::ILP);
+                        //Solution bruteforceSolution = findClosestWithDefectThree(data.originalGraphFormat,data.modifiedGraphEdgeList,data.originalSolution,data.baseline,SearchStrategy::BruteForce);
+
+                        //int ilpDitance = hammingDistanceForDefect(data.originalSolution,ilpSolution);
+                        //int bfDitance = hammingDistanceForDefect(data.originalSolution,bruteforceSolution);
+                        exportData(data, ilpSolution, SearchStrategy::ILP, outFile);
+                    }
+                    vertex_counter++;
+                }
+            }
         }
 
         file.close();
     }
 
 #endif
-
+    outFile.close();
 }
