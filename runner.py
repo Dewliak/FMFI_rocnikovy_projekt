@@ -8,14 +8,14 @@ from rich.progress import TimeElapsedColumn
 EXPORT_FOLDER = "export_data/bulk/"
 SKIPPED_GRAPHS = []
 FOLDERS_TO_PROCESS = ["data/4_edge_critical_snarks.10.g6",
-                      #"data/4_edge_critical_snarks.18.g6",
-                      #"data/4_edge_critical_snarks.20.g6",
-                      #"data/4_edge_critical_snarks.22.g6",
-                      #"data/4_edge_critical_snarks.26.g6",
-                      #data/4_edge_critical_snarks.28.g6",
-                      #"data/4_edge_critical_snarks.30.g6",
-                      #"data/4_edge_critical_snarks.32.g6",
-                      #"data/4_edge_critical_snarks.34.g6",
+                      "data/4_edge_critical_snarks.18.g6",
+                      "data/4_edge_critical_snarks.20.g6",
+                      "data/4_edge_critical_snarks.22.g6",
+                      "data/4_edge_critical_snarks.26.g6",
+                      "data/4_edge_critical_snarks.28.g6",
+                      "data/4_edge_critical_snarks.30.g6",
+                      "data/4_edge_critical_snarks.32.g6",
+                      "data/4_edge_critical_snarks.34.g6",
                       ]
 
 
@@ -26,7 +26,7 @@ BINARY = "./cmake-build-debug/rocnikovy_projekt"
 Store which graph we are currently working on
 """
 
-FLAG_ONE_COLOR = True
+FLAG_ONE_COLOR = False
 def run(format:str, file_name:str,file_index: int, max_index:int = -1, progress = None):
     if progress == None:
         raise "Progress object needed"
