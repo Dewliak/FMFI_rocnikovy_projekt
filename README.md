@@ -81,9 +81,11 @@ takéto párovania nájde na základe zisteného farbenia.
         
 
 # Done:
+    - Python runner for running the graph calculations    
     - Finding answers for all the critical snarks with vertices n <= 32 (started on n=34), 1 coloring/configuraion,
         so with the flags --one_color --all_pairs. Exported them into export_data/bulk
-    - Python runner for running the graph calculations
+    
+    - Finding answers for all the critical snarks with vertices n <= 28 (started working on n=30), all coloring/configuration
 
     - TESTING - write it
     - Testing:
